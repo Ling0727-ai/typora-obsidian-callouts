@@ -1,0 +1,23 @@
+
+/* Obsidian Callout palette for Night; screen only to preserve print colors. */
+@media screen {
+  #write {
+    --obs-definition-rgb: 118, 205, 162;
+    --obs-theorem-rgb: 128, 178, 244;
+    --obs-corollary-rgb: 168, 156, 246;
+    --obs-proof-rgb: 186, 170, 210;
+    --obs-example-rgb: 228, 178, 108;
+    --obs-method-rgb: 118, 200, 224;
+    --obs-note-rgb: 170, 186, 208;
+    --obs-info-rgb: 140, 190, 220;
+    --obs-tip-rgb: 222, 194, 118;
+    --obs-warning-rgb: 244, 150, 138;
+    --obs-important-rgb: 240, 148, 182;
+    --obs-summary-rgb: 178, 180, 190;
+    --obs-flowchart-rgb: 118, 208, 192;
+    --obs-notes-rgb: 170, 186, 208;
+    --obs-importent-rgb: 240, 148, 182;
+    --obs-definitiion-rgb: 118, 205, 162;
+    --obs-caution-rgb: 244, 150, 138;
+  }
+}

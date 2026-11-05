@@ -1,0 +1,8 @@
+{
+  "name": "obgnail/typora_plugin",
+  "version": "1.19.14",
+  "asset": "typora-plugin-1.19.14.zip",
+  "url": "https://github.com/obgnail/typora_plugin/releases/download/1.19.14/typora-plugin%40v1.19.14.zip",
+  "sha256": "63054889f4880d041c82e6535a4f7a8fe160134f2aa3c9c043a050376344032a",
+  "license": "MIT"
+}
