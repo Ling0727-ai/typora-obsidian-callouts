@@ -1,6 +1,17 @@
 ## Install with npm / 使用 npm 安装
 
-GitHub Packages (one-time registry configuration and authentication required):
+Public npmjs package / 公开 npmjs 包（安装无需登录）：
+
+```sh
+npm install -g @ling0727-ai/typora-obsidian-callouts@latest
+typora-obsidian-callouts install
+```
+
+If this scope previously used GitHub Packages, run `npm config delete @ling0727-ai:registry` first.
+
+若此前作用域指向 GitHub Packages，请先执行 `npm config delete @ling0727-ai:registry`。
+
+Optional GitHub Packages mirror (registry configuration and authentication required):
 
 ```sh
 npm config set @ling0727-ai:registry https://npm.pkg.github.com

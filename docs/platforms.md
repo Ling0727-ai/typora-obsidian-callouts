@@ -2,24 +2,22 @@
 
 ## 推荐：npm 安装
 
-需要 Node.js 20+ 和 npm，不需要 Python。首次配置 GitHub Packages 并登录：
+需要 Node.js 20+ 和 npm，不需要 Python。默认从公开 npmjs.org 安装，无需用户登录：
 
 ```sh
-npm config set @ling0727-ai:registry https://npm.pkg.github.com
-npm login --scope=@ling0727-ai --auth-type=legacy --registry=https://npm.pkg.github.com
 npm install -g @ling0727-ai/typora-obsidian-callouts@latest
 typora-obsidian-callouts install
 ```
 
-用户名使用自己的 GitHub 用户名，密码使用有 `read:packages` 的 classic PAT，私有包还要求账号具有读取权限。
-GitHub 的 npm registry 对公开包也要求认证。无需 npm 账号。
-不使用 Token 时，仍可直接安装公开 Release URL：
+如果曾将作用域指向 GitHub Packages，请先运行 `npm config delete @ling0727-ai:registry`。
+GitHub Packages 仅作为可选镜像，认证要求见 `docs/github-packages.md`。
+也可直接安装公开 Release URL：
 `npm install -g https://github.com/Ling0727-ai/typora-obsidian-callouts/releases/latest/download/typora-obsidian-callouts.tgz`。
 
 开发版或尚无稳定版本时，URL 改为 `https://github.com/Ling0727-ai/typora-obsidian-callouts/releases/download/dev/typora-obsidian-callouts.tgz`。
 也可以下载 `.tgz` 后执行 `npm install -g ./typora-obsidian-callouts.tgz`。
 Release 附带 `.sha256` 校验文件。npm 包包括框架和解压依赖，插件安装阶段不需额外下载。
-包在 GitHub Packages 发布，不在 npmjs.org 发布；不能省略作用域的 registry 配置。
+公开 npmjs 包不需要额外配置作用域 registry。
 
 ```sh
 typora-obsidian-callouts update
@@ -134,12 +132,14 @@ sh install.sh --repair
 5. main 成功构建后自动更新 `dev` 预发布；匹配版本标签时创建稳定 Release。两者都附带可直接下载的安装包。
 6. 稳定标签在三平台和 Release 发布完成后，将已经检查的 `.tgz` 发布到 GitHub Packages，并验证认证安装。
    此步骤使用 `GITHUB_TOKEN` 和 `packages: write`，无需维护者 PAT；重复执行时校验已发布版本一致。
+7. 同一稳定标签通过 OIDC Trusted Publishing 发布公共 npmjs 包，并读取公开 metadata 核对版本。
+   该步骤要求 npmjs 已建立匹配 `Ling0727-ai/typora-obsidian-callouts` 和 `build.yml` 的受信任发布配置。
 
-`VERSION` 与 `package.json` 的版本号必须一致。发布标签也必须匹配，例如版本为 `0.2.3`：
+`VERSION` 与 `package.json` 的版本号必须一致。发布标签也必须匹配，例如版本为 `0.2.4`：
 
 ```sh
-git tag v0.2.3
-git push origin v0.2.3
+git tag v0.2.4
+git push origin v0.2.4
 ```
 
 CI 不运行真实 Typora，不消耗 Typora 许可证。安装与后台 DOM 检查不能代替真实应用兼容性确认。

@@ -8,7 +8,7 @@ const assert = require('node:assert/strict');
 const root = path.resolve(__dirname, '..');
 const pkg = require('../package.json');
 const registry = 'https://npm.pkg.github.com';
-assert.equal(pkg.publishConfig.registry, registry);
+assert(!pkg.publishConfig.registry || pkg.publishConfig.registry === registry, 'Do not force a different publishing registry in the tarball');
 assert(pkg.name.startsWith('@ling0727-ai/'));
 assert.equal(fs.readFileSync(path.join(root, 'VERSION'), 'utf8').trim(), pkg.version);
 assert.equal(process.env.GITHUB_REF_NAME, 'v' + pkg.version, 'Only matching version tags publish to GitHub Packages');
@@ -35,7 +35,7 @@ if (existing.status === 0) {
 } else {
   const message = existing.stderr || '';
   if (!/E404|404 Not Found/.test(message)) throw new Error('Cannot check package version: ' + message);
-  const published = npm(['publish', tarball, '--registry', registry, '--tag', 'latest', '--ignore-scripts']);
+  const published = npm(['publish', tarball, '--registry', registry, '--access', 'restricted', '--tag', 'latest', '--ignore-scripts']);
   assert.equal(published.status, 0, published.stderr || published.stdout);
   console.log('Published ' + spec + ' to GitHub Packages.');
 }

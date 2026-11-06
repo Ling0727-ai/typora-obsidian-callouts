@@ -1,5 +1,9 @@
 # GitHub Packages 发布与安装
 
+推荐用户直接安装公开 npmjs 包：`npm install -g @ling0727-ai/typora-obsidian-callouts@latest`。
+下面说明的是可选 GitHub Packages 镜像；只有选择该镜像时才需要 GitHub registry 认证。
+从镜像切回 npmjs 时，先执行 `npm config delete @ling0727-ai:registry`。
+
 本项目的包名为 `@ling0727-ai/typora-obsidian-callouts`，命令名保持 `typora-obsidian-callouts`。
 作用域使用全小写 GitHub 账号名，registry 是 `https://npm.pkg.github.com`。
 无需注册 npmjs.org 账号。
@@ -34,7 +38,8 @@ typora-obsidian-callouts install
 5. Actions 通过 registry 重新安装指定版本，核对 CLI 版本，不操作真实 Typora。
 
 发布步骤仅授予 `contents: read` 和 `packages: write`，使用仓库自带的 `GITHUB_TOKEN`。
-不需要维护者创建 PAT 或在本机执行 npm 登录。项目 `.npmrc` 只记录作用域的 registry，不包含凭据。
+不需要维护者创建 PAT 或在本机执行 npm 登录。项目不再提供 GitHub 作用域 `.npmrc`，
+避免覆盖默认 npmjs 源；镜像 job 通过 setup-node 独立配置 registry 和临时 Token。
 开发构建继续发布到 dev Release，不重复占用不可覆盖的 npm 稳定版本。
 
 GitHub Packages 首次发布的包默认是私有。若要向其他用户开放，可由包所有者在包的

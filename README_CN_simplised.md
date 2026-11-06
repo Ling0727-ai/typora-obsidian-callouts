@@ -46,21 +46,7 @@ macOS 提供实验性入口，要求已有兼容的 WKWebView 桥接环境，默
 安装 Node.js 20 或更新版本（自带 npm），保存笔记并正常退出 Typora。
 使用当前普通用户的终端执行下面的命令。
 
-### 2. 首次配置 GitHub Packages
-
-无需注册 npm 账号。准备 GitHub 的 **Personal access token (classic)**，
-安装通常只需要 `read:packages` 权限，再配置作用域并登录：
-
-```sh
-npm config set @ling0727-ai:registry https://npm.pkg.github.com
-npm login --scope=@ling0727-ai --auth-type=legacy --registry=https://npm.pkg.github.com
-```
-
-用户名填写你自己的 GitHub 用户名，密码使用 Token。私有包还需要账号具有包的读取权限。
-GitHub npm registry 即使是公开包也要求认证，详见
-[官方认证说明](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry)。
-
-### 3. 使用 npm 安装工具与插件
+### 2. 使用 npm 安装工具与插件
 
 ```sh
 npm install -g @ling0727-ai/typora-obsidian-callouts@latest
@@ -69,8 +55,14 @@ typora-obsidian-callouts install
 
 npm 安装只安装管理工具，第二条命令才显式写入 Typora 插件与样式。
 包内包含上游框架和解压依赖，写入插件时不需要额外下载。
-作用域包托管在 **GitHub Packages**，不是 npmjs.org；未配置上面的 registry 时会请求错误的源。
-发布权限、包可见性和 Git 安装的边界见 [GitHub Packages 说明](docs/github-packages.md)。
+公开包默认从 **npmjs.org** 安装，使用者不需要 npm 账号、GitHub Token 或 registry 登录。
+GitHub Packages 保留为可选的认证镜像，详见 [镜像说明](docs/github-packages.md)。
+
+如果先前配置过作用域指向 GitHub Packages，先移除该映射，再使用 npmjs：
+
+```sh
+npm config delete @ling0727-ai:registry
+```
 
 如果之前安装了无作用域的 0.2.2 工具，请先移除旧 npm 包，再安装新作用域包，避免命令名冲突：
 
@@ -139,7 +131,7 @@ typora-obsidian-callouts install --dark-theme my-dark-theme
 
 同一安装记录的 `ThemeDir` 和 `DarkTheme` 需保持固定，更换前先执行 `uninstall`。
 
-### 4. 重启并查看效果
+### 3. 重启并查看效果
 
 重新打开 Typora，使用本文的 Callout 或图片示例。
 仓库及平台 ZIP 内另有 `examples/callouts.md`、`examples/images.md`。
@@ -199,7 +191,7 @@ GitHub 风格提示块；本项目不修改这个偏好。
 
 ## 更新与修复
 
-从 GitHub Packages 更新工具，再应用更新：
+从 npmjs.org 更新工具，再应用更新：
 
 ```sh
 npm install -g @ling0727-ai/typora-obsidian-callouts@latest
@@ -256,8 +248,11 @@ docs/          设计和开发说明
 
 GitHub Actions 在 Windows、Linux、macOS 上检查 npm 安装器，并生成 `.tgz`、平台 ZIP 和 SHA-256 文件。
 成功的 main 构建发布到 dev 预发布；匹配 `VERSION` 的 `v*` 标签创建稳定 Release，
-并将作用域包发布到 GitHub Packages 的 `latest`。Actions 使用仓库自带的 `GITHUB_TOKEN`
-和 `packages: write`，维护者无需另建发布 PAT。开发构建只更新 dev Release。
+并通过 npm Trusted Publishing（OIDC）将作用域包发布到 npmjs.org 的 `latest`，无需长期 npm Token。
+npm 包需预先授权此仓库的 `build.yml` 工作流，并允许直接发布；工作流使用 `id-token: write`。
+维护者配置见 [npm 自动发布说明](docs/npm-publishing.md)。
+独立镜像步骤使用 `GITHUB_TOKEN` 和 `packages: write` 发布到 GitHub Packages。
+开发构建只更新 dev Release。
 Artifacts 作为流水线中转和备用下载。
 详见 [CI 和发布说明](docs/platforms.md#ci-和发布)。本地跨平台检查与打包：
 

@@ -154,9 +154,11 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: '22'
+          node-version: '24'
           registry-url: https://npm.pkg.github.com
           scope: '@ling0727-ai'
+      - name: Use npm CLI with explicit publishing flag precedence
+        run: npm install --global npm@11.20.0 --ignore-scripts --no-audit --no-fund --registry=https://registry.npmjs.org
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: typora-obsidian-callouts-npm
@@ -165,3 +167,28 @@ jobs:
         run: npm run publish:github
         env:
           NODE_AUTH_TOKEN: ${{ github.token }}
+
+  npm:
+    name: Publish public npm package
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build, release]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+          registry-url: https://registry.npmjs.org
+          scope: '@ling0727-ai'
+      - name: Use npm CLI with Trusted Publishing support
+        run: npm install --global npm@11.20.0 --ignore-scripts --no-audit --no-fund
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: typora-obsidian-callouts-npm
+          path: dist
+      - name: Publish tested tarball with npm OIDC
+        run: npm run publish:npm

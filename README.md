@@ -38,21 +38,7 @@ Install **Node.js 20+ and npm**, save your notes, and quit Typora.
 Run the following commands in a terminal as your normal user.
 The npm installer does not require Python.
 
-### 2. Authenticate to GitHub Packages once
-
-No npm account is needed. Create a GitHub **personal access token (classic)** with
-`read:packages` permission, then configure the scope and sign in:
-
-```sh
-npm config set @ling0727-ai:registry https://npm.pkg.github.com
-npm login --scope=@ling0727-ai --auth-type=legacy --registry=https://npm.pkg.github.com
-```
-
-Enter your own GitHub username and use the token as the password. A private package also
-requires your account to have access. GitHub's npm registry requires authentication even for
-public packages. See the [official authentication guide](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry).
-
-### 3. Install the tool and plugin
+### 2. Install the tool and plugin
 
 ```sh
 npm install -g @ling0727-ai/typora-obsidian-callouts@latest
@@ -63,8 +49,16 @@ The npm command installs the management tool. The second command explicitly inst
 plugin and styles. The tarball bundles the framework and extraction dependency, so this
 step does not need additional downloads.
 
-The scoped package is hosted at **GitHub Packages**, not npmjs.org. Without the scope registry
-configuration above, npm will query the wrong registry. See [publishing and access details](docs/github-packages.md) (Chinese).
+The public package is hosted on **npmjs.org**. Installing it does not require an npm account,
+GitHub token, or registry login. GitHub Packages remains an optional authenticated mirror;
+see [mirror details](docs/github-packages.md) (Chinese).
+
+If you previously configured this scope to use GitHub Packages, remove that mapping before
+installing from npmjs.org:
+
+```sh
+npm config delete @ling0727-ai:registry
+```
 
 If you previously installed the unscoped 0.2.2 CLI, remove that CLI before installing the new
 scoped package to avoid a command-name conflict:
@@ -139,7 +133,7 @@ typora-obsidian-callouts install --dark-theme my-dark-theme
 Keep `ThemeDir` and `DarkTheme` unchanged for an existing installation. Run `uninstall` before
 changing these targets. Use `typora-obsidian-callouts --help` to see all options.
 
-### 4. Restart Typora
+### 3. Restart Typora
 
 Reopen Typora and try the callout or image syntax below. The repository and platform ZIPs
 also include [callout examples](examples/callouts.md) and [image examples](examples/images.md).
@@ -201,7 +195,7 @@ Legacy aliases `notes`, `importent`, and `definitiion` are supported.
 
 ## Update, repair, and uninstall
 
-To update from GitHub Packages, fetch the latest tool and apply the new files:
+To update from npmjs.org, fetch the latest tool and apply the new files:
 
 ```sh
 npm install -g @ling0727-ai/typora-obsidian-callouts@latest
@@ -247,9 +241,12 @@ records/backups use `~/.config/typora_plugin/obsidian-callouts/`.
 
 [GitHub Actions](https://github.com/Ling0727-ai/typora-obsidian-callouts/actions/workflows/build.yml)
 checks Windows, Linux, and macOS. Successful `main` builds update the `dev` prerelease;
-matching `v*` tags publish stable Releases and the scoped package to GitHub Packages as `latest`.
-The publishing job uses the repository's `GITHUB_TOKEN` with `packages: write`; maintainers
-do not need to create a PAT for Actions publishing. Development builds stay in the `dev` Release.
+matching `v*` tags publish stable Releases and the scoped package to npmjs.org as `latest`.
+npm publication uses Trusted Publishing (OIDC) with `id-token: write`; it needs a matching
+trusted publisher on npmjs.com and no long-lived npm token.
+See [npm publishing setup](docs/npm-publishing.md) (Chinese).
+A separate mirror job publishes to GitHub Packages with `GITHUB_TOKEN` and `packages: write`.
+Development builds stay in the `dev` Release.
 Release assets include the npm `.tgz`, platform ZIPs, and SHA-256 files.
 Artifacts are retained as intermediate and fallback downloads.
 

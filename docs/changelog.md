@@ -1,5 +1,12 @@
 # 修改记录
 
+## 0.2.4
+
+- 默认安装源改为公开 npmjs.org，用户可直接执行作用域包的短命令，无需登录或 GitHub Token。
+- 删除项目 GitHub scope 映射，双语 README 说明如何清除旧映射并切回默认源。
+- 稳定标签通过 npm Trusted Publishing（OIDC）自动发布，使用已授权的 build.yml，不保存长期 npm Token。
+- 保留 GitHub Packages 认证镜像和 GitHub Release tarball/平台 ZIP。
+
 ## 0.2.3
 
 - 包名改为 `@ling0727-ai/typora-obsidian-callouts`，配置 GitHub Packages registry，命令名保持不变。
