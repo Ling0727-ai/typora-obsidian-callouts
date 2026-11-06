@@ -24,10 +24,14 @@ const root = path.resolve(__dirname, '..');
       <blockquote id="pending" class="plugin-callout" callout-type="note"><p><span>待处理的标题</span></p></blockquote>
       <div id="native-note-title" class="md-alert md-alert-note"><p><span>[!note] 适用条件与单位</span><br><span>首次打开文件时的正文。</span></p></div>
       <div id="native-note" class="md-alert md-alert-note"><p><span md-inline="alert_text" class="md-alert-text md-alert-text-note"><span class="md-alert-text-container" data-text="note"></span><span class="md-meta md-after md-content">[!note]</span></span><br><span>原生 NOTE 正文。</span></p></div>
+      <div id="warning-math" class="md-alert md-alert-warning"><p><span>[!warning] 映射点</span><span class="md-inline-math"><mjx-container><svg width="16" height="20" viewBox="0 0 16 20"><text y="16" fill="currentColor">D</text></svg></mjx-container></span><span class="title-tail">与实际脉动循环点的区别</span><br><span class="warning-body"><strong><span>已知：</span></strong>正文保持黑色。</span><span class="md-inline-math body-math"><mjx-container><svg width="16" height="20"><text y="16">D</text></svg></mjx-container></span></p></div>
+      <blockquote id="warning-softbreak"><p><span>[!warning] 映射点</span><span class="md-inline-math"><mjx-container>D</mjx-container></span><span class="title-tail">与实际脉动循环点的区别</span><span class="md-softbreak">\n</span><span class="warning-body">正文</span><span class="md-softbreak">\n</span><span class="later-body">下一行正文</span></p></blockquote>
     </div>`);
     const upstreamStyle = fs.readFileSync(path.join(root, 'tests/fixtures/upstream-callouts.css'), 'utf8')
       .replace(/\$\{[^}]*\}/g, '');
     await page.addStyleTag({content: upstreamStyle});
+    // Include the upstream generated title rule and a theme's math color rule.
+    await page.addStyleTag({content: '.plugin-callout > p:first-child span:first-child { color: #777; } #write .md-inline-math svg { color: black; }'});
     await page.addStyleTag({path: path.join(root, 'styles/callouts.css')});
     const sandbox = { BasePlugin: class {}, module: { exports: {} } };
     vm.runInNewContext(fs.readFileSync(path.join(root, 'patches/callouts/index.js'), 'utf8'), sandbox);
@@ -62,6 +66,15 @@ const root = path.resolve(__dirname, '..');
         nativeCustomTitle: document.querySelector('#native-note-title p > span').getAttribute('data-type'),
         nativeCustomSize: getComputedStyle(document.querySelector('#native-note-title p > span'),'::after').fontSize,
         nativeStandalone: document.querySelector('#native-note').classList.contains('plugin-callout'),
+        warningHeader: getComputedStyle(document.querySelector('#warning-math p > span'),'::after').color,
+        warningTail: getComputedStyle(document.querySelector('#warning-math .title-tail')).color,
+        warningMath: getComputedStyle(document.querySelector('#warning-math .md-inline-math svg')).color,
+        warningBody: getComputedStyle(document.querySelector('#warning-math .warning-body')).color,
+        warningBodyStrong: getComputedStyle(document.querySelector('#warning-math .warning-body strong span')).color,
+        warningBodyMath: getComputedStyle(document.querySelector('#warning-math .body-math svg')).color,
+        softbreakTail: getComputedStyle(document.querySelector('#warning-softbreak .title-tail')).color,
+        softbreakBody: getComputedStyle(document.querySelector('#warning-softbreak .warning-body')).color,
+        softbreakLater: getComputedStyle(document.querySelector('#warning-softbreak .later-body')).color,
         unsafeElements: document.querySelectorAll('#safe img').length,
         raw: header.textContent
       };
@@ -83,6 +96,15 @@ const root = path.resolve(__dirname, '..');
     assert.equal(result.nativeCustomTitle,'适用条件与单位');
     assert.ok(parseFloat(result.nativeCustomSize)>0);
     assert.equal(result.nativeStandalone,false, 'A valid native alert must not be decorated twice');
+    assert.equal(result.warningHeader,'rgb(170, 58, 44)');
+    assert.equal(result.warningTail,result.warningHeader);
+    assert.equal(result.warningMath,result.warningHeader);
+    assert.equal(result.warningBody,'rgb(0, 0, 0)');
+    assert.equal(result.warningBodyStrong,result.warningBody);
+    assert.equal(result.warningBodyMath,result.warningBody);
+    assert.equal(result.softbreakTail,result.warningHeader);
+    assert.equal(result.softbreakBody,result.warningBody);
+    assert.equal(result.softbreakLater,result.warningBody);
     assert.equal(result.unsafeElements,0);
     assert.equal(result.raw,'[!note] 适用条件与单位');
     await page.locator('#note p').evaluate(p=>p.classList.add('md-focus'));
@@ -90,6 +112,7 @@ const root = path.resolve(__dirname, '..');
     await page.locator('#note p').evaluate(p=>p.classList.remove('md-focus'));
     await fs.promises.mkdir(path.join(root,'.work'),{recursive:true});
     await page.screenshot({path:path.join(root,'.work/titles.png')});
+    await page.locator('#warning-math').screenshot({path:path.join(root,'.work/warning-colors.png')});
     // Out-of-order loading must leave the raw title visible, never blank.
     await page.locator('#note span').first().evaluate(s=>s.removeAttribute('data-type'));
     assert.notEqual(await page.locator('#note span').first().evaluate(s=>getComputedStyle(s).fontSize),'0px');

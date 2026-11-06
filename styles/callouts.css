@@ -64,6 +64,21 @@
  font-size: inherit;
  font-weight: 600;
 }
+/* Upstream colors every descendant span:first-child, including inline body
+   markup. Reset that broad rule, then color only nodes before the first break.
+   Typora splits a title around math/emphasis into several sibling spans. */
+#write .plugin-callout > p:first-child span:first-child {
+ color: inherit;
+}
+#write .plugin-callout > p:first-child > :not(br):not(.md-softbreak):not(br ~ *):not(.md-softbreak ~ *) {
+ color: rgb(var(--obs-callout-rgb));
+ font-weight: 600;
+}
+/* Some themes hard-code the formula SVG color. Let title math follow its
+   colored heading node; body formulas are outside this selector. */
+#write .plugin-callout > p:first-child > :not(br):not(.md-softbreak):not(br ~ *):not(.md-softbreak ~ *) :is(.md-inline-math, mjx-container, svg, .MathJax, .MathJax_SVG) {
+ color: inherit !important;
+}
 /* Hide source only when replacement metadata exists. Never render a blank
    header merely because a plugin hasn't decorated the current DOM yet. */
 #write .plugin-callout > p:first-child > span:first-child[data-type] {
