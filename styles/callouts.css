@@ -71,7 +71,8 @@
 }
 #write .plugin-callout > p:first-child > span:first-child::after {
  content: attr(data-type);
- font-size: .98em;
+ /* The source span has font-size:0. An em value here would also be zero. */
+ font-size: .98rem;
  font-weight: 600;
  letter-spacing: .02em;
  color: rgb(var(--obs-callout-rgb));

@@ -45,6 +45,7 @@ const root = path.resolve(__dirname, '..');
       return {
         title: header.getAttribute('data-type'),
         after: getComputedStyle(header,'::after').content,
+        titleFontSize: getComputedStyle(header,'::after').fontSize,
         bodyWeight: getComputedStyle(body).fontWeight,
         bodyColor: getComputedStyle(body).color,
         titleColor: getComputedStyle(header,'::after').color,
@@ -61,6 +62,7 @@ const root = path.resolve(__dirname, '..');
     });
     assert.equal(result.title,'适用条件与单位');
     assert.equal(result.after,'"适用条件与单位"');
+    assert.ok(parseFloat(result.titleFontSize) > 0, 'Title must have a visible font size, even when its source span is 0px');
     assert.equal(result.bodyWeight,'400');
     assert.notEqual(result.bodyColor,result.titleColor);
     assert.equal(result.customTitle,'失效');
@@ -76,11 +78,11 @@ const root = path.resolve(__dirname, '..');
     await page.locator('#note p').evaluate(p=>p.classList.add('md-focus'));
     assert.equal(await page.locator('#note span').first().evaluate(s=>getComputedStyle(s,'::after').content),'none');
     await page.locator('#note p').evaluate(p=>p.classList.remove('md-focus'));
+    await fs.promises.mkdir(path.join(root,'.work'),{recursive:true});
+    await page.screenshot({path:path.join(root,'.work/titles.png')});
     // Out-of-order loading must leave the raw title visible, never blank.
     await page.locator('#note span').first().evaluate(s=>s.removeAttribute('data-type'));
     assert.notEqual(await page.locator('#note span').first().evaluate(s=>getComputedStyle(s).fontSize),'0px');
-    await fs.promises.mkdir(path.join(root,'.work'),{recursive:true});
-    await page.screenshot({path:path.join(root,'.work/titles.png')});
     console.log('PASS: custom titles, fallback, folding, normal body style, literal text safety, editing visibility and source preservation');
     console.log(result);
   } finally { await browser.close(); }
