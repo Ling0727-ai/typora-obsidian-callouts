@@ -23,3 +23,7 @@ author's personal callout palette. They do not require Obsidian or an icon font.
 
 `patches/obsidian_images/index.js` is original project code under the MIT license.
 It adapts the installed Typora image parser; no Typora source code is redistributed.
+
+The npm installer bundles `adm-zip` 0.6.1, licensed under the MIT license.
+Its original license is included in the bundled npm dependency. Upstream:
+https://github.com/cthackers/adm-zip

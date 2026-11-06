@@ -1,10 +1,38 @@
 # 平台安装与 GitHub Actions
 
+## 推荐：npm 安装
+
+需要 Node.js 20+ 和 npm，不需要 Python。所有平台统一使用：
+
+```sh
+npm install -g https://github.com/Ling0727-ai/typora-obsidian-callouts/releases/latest/download/typora-obsidian-callouts.tgz
+typora-obsidian-callouts install
+```
+
+开发版或尚无稳定版本时，URL 改为 `https://github.com/Ling0727-ai/typora-obsidian-callouts/releases/download/dev/typora-obsidian-callouts.tgz`。
+也可以下载 `.tgz` 后执行 `npm install -g ./typora-obsidian-callouts.tgz`。
+Release 附带 `.sha256` 校验文件。npm 包包括框架和解压依赖，插件安装阶段不需额外下载。
+当前未发布 npm registry，请使用完整 Release URL 或本地 tarball。
+
+```sh
+typora-obsidian-callouts update
+typora-obsidian-callouts repair
+typora-obsidian-callouts uninstall
+npm uninstall -g typora-obsidian-callouts
+```
+
+安装前保存并退出 Typora。`--typora-path`、`--theme-dir`、`--user-config-dir`、`--dark-theme`
+参数可覆盖默认目标。macOS 仍需要已有 WKWebView 桥接，默认关闭图片适配，需 `--enable-images` 显式尝试。
+安装器由 Node.js 实现；Windows 只在程序目录写入需要权限时通过系统 UAC 提权，Linux/macOS 则通过 `sudo`。
+用户配置始终由普通用户进程处理。
+
+以下脚本安装入口保留给手动部署或旧版本使用。
+
 ## 下载
 
 稳定版本从仓库的 [Releases](https://github.com/Ling0727-ai/typora-obsidian-callouts/releases) 下载对应平台 ZIP。
-开发版本进入 [Actions](https://github.com/Ling0727-ai/typora-obsidian-callouts/actions/workflows/build.yml)，
-打开成功的运行记录，在 Artifacts 下载对应包（GitHub 通常要求登录）。解压 Artifact 后再解压其中的安装 ZIP。
+开发版本从 [dev 预发布](https://github.com/Ling0727-ai/typora-obsidian-callouts/releases/tag/dev) 下载。
+[Actions](https://github.com/Ling0727-ai/typora-obsidian-callouts/actions/workflows/build.yml) 中的 Artifacts 作为备用下载和中转。
 `.sha256` 文件记录安装 ZIP 的 SHA-256。
 
 | 系统 | 入口 | 当前边界 |
@@ -92,16 +120,17 @@ sh install.sh --repair
 `.github/workflows/build.yml` 在推送 main、Pull Request、版本标签及手动运行时启动：
 
 1. Windows、Ubuntu、macOS 三个平台分别运行 Python 隔离安装、卸载、升级、打包检查。
+   同时检查 Node.js npm 安装器及打包后的 tarball 离线安装，不接触真实 Typora。
 2. Windows 额外运行现有 PowerShell 5.1 生命周期检查。
 3. 三个平台运行 JavaScript 语法检查及 headless Chromium 的 Callout DOM 渲染检查。
-4. 构建平台 ZIP，附带校验文件，上传 Artifacts，保存 30 天。
-5. 当推送 `v<版本号>` 标签时，三平台全部通过后自动发布 GitHub Release 并附带安装包。
+4. 构建 npm `.tgz`、平台 ZIP 和校验文件，通过 Artifacts 中转，保留 30 天。
+5. main 成功构建后自动更新 `dev` 预发布；匹配版本标签时创建稳定 Release。两者都附带可直接下载的安装包。
 
-版本号统一读取根目录 `VERSION`。发布标签必须与文件一致，例如 `VERSION` 为 `0.2.1`：
+`VERSION` 与 `package.json` 的版本号必须一致。发布标签也必须匹配，例如版本为 `0.2.2`：
 
 ```sh
-git tag v0.2.1
-git push origin v0.2.1
+git tag v0.2.2
+git push origin v0.2.2
 ```
 
 CI 不运行真实 Typora，不消耗 Typora 许可证。安装与后台 DOM 检查不能代替真实应用兼容性确认。

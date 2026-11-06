@@ -1,5 +1,14 @@
 # 修改记录
 
+## 0.2.2
+
+- README 默认使用英文，新增 `README_CN_simplised.md`，两份文档顶部互相跳转。
+- 重写安装、更新、修复与卸载说明，以 npm 工具为推荐入口。
+- 新增 Node.js 跨平台 CLI，不需要 Python；npm 安装工具后由 `install` 显式部署插件。
+- npm tarball 打包上游框架与解压依赖，可从 GitHub Release URL 或本地文件安装。
+- main 成功构建自动更新 dev 预发布；版本标签构建发布稳定 Release，不再仅提供 Artifacts。
+- 三平台 CI 检查 npm 工具及 tarball 的离线安装、卸载；macOS 仍为需要已有桥接的实验性适配。
+
 ## 0.2.1
 
 - 新增 GitHub Actions：Windows、Ubuntu、macOS 的隔离安装/卸载/升级检查、Callout 后台渲染检查及离线打包。

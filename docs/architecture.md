@@ -1,5 +1,17 @@
 # 设计与维护
 
+## npm 安装入口
+
+推荐入口为 `bin/typora-obsidian-callouts.cjs`，调用 `lib/installer.cjs`。
+安装器由 Node.js 实现，解压使用固定版本的 `adm-zip`，不依赖 Python 或手动执行 PS1/SH。
+`install`、`update`、`repair`、`uninstall` 共享现有安装记录格式，保留原有用户开关和备份行为。
+写程序目录时可单独请求 UAC/sudo，用户目录写入仍由普通用户进程完成。
+
+`npm run pack:release` 生成包含框架归档、双语 README 和解压依赖的通用 `.tgz`。
+CI 在三平台安装打包后的 tarball，验证依赖可离线安装及插件安装/卸载流程。
+main 构建发布到 dev 预发布，版本标签发布稳定 Release；Artifacts 仅作中转和备用下载。
+下文 PowerShell/Python 安装器继续作为旧版和手动安装入口。
+
 ## 三层组成
 
 1. 上游框架：负责加载 Callouts、监听编辑事件和适配导出。

@@ -17,7 +17,7 @@ def build(platform, output):
     output.mkdir(parents=True, exist_ok=True)
     target = output / (name + ".zip")
     files = []
-    for item in ("README.md", "VERSION", "LICENSE", "THIRD_PARTY_NOTICES.md", "install.cmd", "install.sh", "Install.command", "scripts", "styles", "config", "examples", "vendor", "patches", "docs", "tests"):
+    for item in ("README.md", "README_CN_simplised.md", "VERSION", "package.json", "package-lock.json", "bin", "lib", "LICENSE", "THIRD_PARTY_NOTICES.md", "install.cmd", "install.sh", "Install.command", "scripts", "styles", "config", "examples", "vendor", "patches", "docs", "tests"):
         source = ROOT / item
         files.extend(p for p in source.rglob("*") if p.is_file() and "__pycache__" not in p.parts and p.suffix not in (".pyc", ".log")) if source.is_dir() else files.append(source)
     instructions = {

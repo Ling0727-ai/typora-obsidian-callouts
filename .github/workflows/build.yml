@@ -37,6 +37,10 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '22'
+      - name: Install pinned npm dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Check npm installer
+        run: npm test
       - name: Check tag matches package version
         if: startsWith(github.ref, 'refs/tags/')
         shell: python
@@ -70,12 +74,26 @@ jobs:
         run: node tests/Titles.cjs
       - name: Build offline installer
         run: python scripts/build.py --platform ${{ matrix.platform }}
+      - name: Pack npm installer and check offline installation
+        run: |
+          npm run pack:release
+          npm run check:package
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: typora-obsidian-callouts-${{ matrix.platform }}
           path: |
-            dist/*.zip
-            dist/*.sha256
+            dist/*-${{ matrix.platform }}.zip
+            dist/*-${{ matrix.platform }}.zip.sha256
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload universal npm package
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: typora-obsidian-callouts-npm
+          path: |
+            dist/typora-obsidian-callouts.tgz
+            dist/typora-obsidian-callouts.tgz.sha256
           if-no-files-found: error
           retention-days: 30
       - name: Report verification scope
@@ -86,8 +104,8 @@ jobs:
               f.write('## Installer checks passed\n\nIsolated file installation, packaging and headless Callout DOM checks passed.\n\nActual Typora is not installed or launched by this workflow. macOS requires an existing WKWebView bridge and remains experimental.\n')
 
   release:
-    name: Publish tagged installer packages
-    if: startsWith(github.ref, 'refs/tags/')
+    name: Publish GitHub Release
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -103,8 +121,20 @@ jobs:
       - name: Publish release assets
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'dev' }}
+          COMMIT_SHA: ${{ github.sha }}
         run: |
+          if [ "$RELEASE_TAG" = dev ]; then
+            git tag -f dev "$COMMIT_SHA"
+            git push origin refs/tags/dev --force
+            if gh release view dev >/dev/null 2>&1; then
+              gh release upload dev release-assets/* --clobber
+              gh release edit dev --prerelease --latest=false --title "Development build" --notes-file docs/release-notes.md
+            else
+              gh release create dev release-assets/* --verify-tag --prerelease --latest=false --title "Development build" --notes-file docs/release-notes.md
+            fi
+            exit 0
+          fi
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             gh release upload "$RELEASE_TAG" release-assets/* --clobber
           else

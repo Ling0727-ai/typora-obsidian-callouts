@@ -9,3 +9,4 @@
 *.command text eol=lf
 *.cmd text eol=crlf
 *.yml text eol=lf
+*.cjs text eol=lf
