@@ -35,7 +35,8 @@ GitHub 与 npmjs 账号绑定本身不等于已授权某个工作流发布。
 
 公共发布 job 使用 Node.js 24、npm 11.20.0、`id-token: write` 和 OIDC，
 不读取或复制本机 npm 登录凭据，也不要求保存长期 `NPM_TOKEN`。
-它发布三平台已验证的通用 `.tgz`，然后从公开 registry 读取版本进行核对。
+它发布三平台已验证的通用 `.tgz`，然后匿名读取公开 registry 的版本、latest 标签及完整性进行核对。
+发布后最多等待约六分钟的 registry/CDN 同步，不因短暂 404 重复发布同一版本。
 重复运行只复用完整性一致的既有版本，不覆盖已发布版本。
 
 GitHub Packages 镜像 job 使用 `GITHUB_TOKEN` 与 `packages: write`，认证与 npmjs 分开配置。

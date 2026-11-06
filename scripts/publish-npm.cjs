@@ -2,6 +2,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const { setTimeout: delay } = require('node:timers/promises');
 const { spawnSync } = require('node:child_process');
 const assert = require('node:assert/strict');
 const pkg = require('../package.json');
@@ -14,17 +15,44 @@ const tarball = path.join(root, 'dist/typora-obsidian-callouts.tgz');
 assert.equal(crypto.createHash('sha256').update(fs.readFileSync(tarball)).digest('hex'), fs.readFileSync(tarball + '.sha256', 'utf8').split(/\s/)[0]);
 const npm = args => spawnSync(process.execPath, [process.env.npm_execpath, ...args], { cwd: root, encoding: 'utf8' });
 const spec = pkg.name + '@' + pkg.version;
-const existing = npm(['view', spec, 'dist.integrity', '--registry', registry, '--json']);
-if (existing.status === 0) {
-  assert.equal(JSON.parse(existing.stdout), 'sha512-' + crypto.createHash('sha512').update(fs.readFileSync(tarball)).digest('base64'), 'Existing npm version differs from this tarball');
-  console.log('Matching immutable npm version already published.');
-} else {
-  if (!/E404|404 Not Found/.test(existing.stderr || '')) throw new Error(existing.stderr || 'Unable to inspect npm version');
-  const result = npm(['publish', tarball, '--registry', registry, '--access', 'public', '--tag', 'latest', '--ignore-scripts']);
-  assert.equal(result.status, 0, result.stderr || result.stdout);
-  console.log('Published ' + spec + ' to npmjs.org via OIDC.');
+const expectedIntegrity = 'sha512-' + crypto.createHash('sha512').update(fs.readFileSync(tarball)).digest('base64');
+
+async function publicMetadata(version) {
+  // A fresh anonymous HTTP request avoids npm's cached pre-publish packument.
+  const url = registry + '/' + pkg.name.replace('/', '%2f') + '/' + version + '?verify=' + Date.now();
+  const response = await fetch(url, { headers: { 'cache-control': 'no-cache' }, signal: AbortSignal.timeout(15000) });
+  if (response.status === 404) return null;
+  if (!response.ok) throw new Error('Public registry metadata HTTP ' + response.status);
+  return response.json();
 }
-const check = npm(['view', spec, 'version', '--registry', registry, '--json']);
-assert.equal(check.status, 0, check.stderr);
-assert.equal(JSON.parse(check.stdout), pkg.version);
-console.log('PASS: public npm registry exposes ' + spec);
+
+async function publish() {
+  const existing = await publicMetadata(pkg.version);
+  if (existing) {
+    assert.equal(existing.dist.integrity, expectedIntegrity, 'Existing npm version differs from this tarball');
+    console.log('Matching immutable npm version already published.');
+  } else {
+    const result = npm(['publish', tarball, '--registry', registry, '--access', 'public', '--tag', 'latest', '--ignore-scripts']);
+    if (result.status !== 0 && !/cannot publish over the previously published versions/i.test(result.stderr || '')) throw new Error(result.stderr || result.stdout);
+    console.log(result.status === 0 ? 'Published ' + spec + ' via OIDC.' : 'Registry reports an existing version; waiting for public metadata.');
+  }
+  // npm/CDN propagation can take minutes. Verify without publishing again.
+  for (let attempt = 0; attempt < 36; attempt++) {
+    try {
+      const [version, latest] = await Promise.all([publicMetadata(pkg.version), publicMetadata('latest')]);
+      if (version && latest?.version === pkg.version) {
+        assert.equal(version.dist.integrity, expectedIntegrity, 'Public tarball differs from the checked artifact');
+        console.log('PASS: anonymous public registry exposes ' + spec + ' as latest with matching integrity.');
+        return;
+      }
+    } catch (error) {
+      if (error.code === 'ERR_ASSERTION') throw error;
+      console.log('Public metadata not ready: ' + error.message);
+    }
+    console.log('Waiting for registry propagation (' + (attempt + 1) + '/36)...');
+    await delay(10000);
+  }
+  throw new Error('Published version is not visible as latest after the registry propagation window');
+}
+
+publish().catch(error => { console.error(error.message); process.exitCode = 1; });
