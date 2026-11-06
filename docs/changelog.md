@@ -1,5 +1,13 @@
 # 修改记录
 
+## 0.2.3
+
+- 包名改为 `@ling0727-ai/typora-obsidian-callouts`，配置 GitHub Packages registry，命令名保持不变。
+- 稳定标签通过 Actions 的 `GITHUB_TOKEN` 自动发布到 GitHub Packages，并重新从 registry 安装核对版本。
+- 保留 Release tarball 的免 Token 安装方式和 dev 预发布。
+- 双语 README 补充 scope 源配置、classic PAT 登录、旧无作用域工具迁移与包访问要求。
+- 明确公开 npm 包在 GitHub Packages 也需要认证，Git 源码安装不等同于自动执行 `npm run build`。
+
 ## 0.2.2
 
 - README 默认使用英文，新增 `README_CN_simplised.md`，两份文档顶部互相跳转。

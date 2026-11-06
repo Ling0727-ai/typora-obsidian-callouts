@@ -1,5 +1,20 @@
 ## Install with npm / 使用 npm 安装
 
+GitHub Packages (one-time registry configuration and authentication required):
+
+```sh
+npm config set @ling0727-ai:registry https://npm.pkg.github.com
+npm login --scope=@ling0727-ai --auth-type=legacy --registry=https://npm.pkg.github.com
+npm install -g @ling0727-ai/typora-obsidian-callouts@latest
+typora-obsidian-callouts install
+```
+
+Use your GitHub username and a classic PAT with `read:packages`. Private packages require account access.
+GitHub Packages requires authentication even for public npm packages; no npmjs.org account is needed.
+
+GitHub Packages 安装使用自己的 GitHub 账号与具有 `read:packages` 的 classic PAT。
+私有包还要求账号具有读取权限；公开 npm 包同样需要认证，无需 npmjs.org 账号。
+
 Requires Node.js 20+ and npm. Download the attached `typora-obsidian-callouts.tgz`, then run:
 
 需要 Node.js 20+ 和 npm。下载下方的 `typora-obsidian-callouts.tgz`，随后执行：
@@ -13,9 +28,9 @@ Stable: `npm install -g https://github.com/Ling0727-ai/typora-obsidian-callouts/
 
 Development: `npm install -g https://github.com/Ling0727-ai/typora-obsidian-callouts/releases/download/dev/typora-obsidian-callouts.tgz`
 
-The npm package bundles its dependencies and needs no Python. It is distributed through GitHub Releases, not the npm registry.
+The npm package bundles its dependencies and needs no Python. Release tarballs are the alternative that needs no GitHub token.
 
-npm 包包含运行依赖，无需 Python。当前通过 GitHub Releases 分发，尚未发布 npm registry。
+npm 包包含运行依赖，无需 Python。直接安装 Release tarball 不需要 GitHub Token。
 
 ## Optional manual packages / 可选手动安装包
 

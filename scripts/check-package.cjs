@@ -12,7 +12,7 @@ try {
     return result.stdout;
   };
   run(process.execPath, [process.env.npm_execpath, 'install', '--global', '--prefix', prefix, path.join(root, 'dist/typora-obsidian-callouts.tgz'), '--offline', '--ignore-scripts', '--no-audit', '--no-fund']);
-  const installed = path.join(prefix, process.platform === 'win32' ? 'node_modules' : 'lib/node_modules', 'typora-obsidian-callouts');
+  const installed = path.join(prefix, process.platform === 'win32' ? 'node_modules' : 'lib/node_modules', ...require('../package.json').name.split('/'));
   assert(fs.existsSync(path.join(installed, 'README_CN_simplised.md')));
   assert(fs.existsSync(path.join(installed, 'node_modules/adm-zip/adm-zip.js')));
   const cli = path.join(installed, 'bin/typora-obsidian-callouts.cjs');

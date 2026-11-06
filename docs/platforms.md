@@ -2,23 +2,30 @@
 
 ## 推荐：npm 安装
 
-需要 Node.js 20+ 和 npm，不需要 Python。所有平台统一使用：
+需要 Node.js 20+ 和 npm，不需要 Python。首次配置 GitHub Packages 并登录：
 
 ```sh
-npm install -g https://github.com/Ling0727-ai/typora-obsidian-callouts/releases/latest/download/typora-obsidian-callouts.tgz
+npm config set @ling0727-ai:registry https://npm.pkg.github.com
+npm login --scope=@ling0727-ai --auth-type=legacy --registry=https://npm.pkg.github.com
+npm install -g @ling0727-ai/typora-obsidian-callouts@latest
 typora-obsidian-callouts install
 ```
+
+用户名使用自己的 GitHub 用户名，密码使用有 `read:packages` 的 classic PAT，私有包还要求账号具有读取权限。
+GitHub 的 npm registry 对公开包也要求认证。无需 npm 账号。
+不使用 Token 时，仍可直接安装公开 Release URL：
+`npm install -g https://github.com/Ling0727-ai/typora-obsidian-callouts/releases/latest/download/typora-obsidian-callouts.tgz`。
 
 开发版或尚无稳定版本时，URL 改为 `https://github.com/Ling0727-ai/typora-obsidian-callouts/releases/download/dev/typora-obsidian-callouts.tgz`。
 也可以下载 `.tgz` 后执行 `npm install -g ./typora-obsidian-callouts.tgz`。
 Release 附带 `.sha256` 校验文件。npm 包包括框架和解压依赖，插件安装阶段不需额外下载。
-当前未发布 npm registry，请使用完整 Release URL 或本地 tarball。
+包在 GitHub Packages 发布，不在 npmjs.org 发布；不能省略作用域的 registry 配置。
 
 ```sh
 typora-obsidian-callouts update
 typora-obsidian-callouts repair
 typora-obsidian-callouts uninstall
-npm uninstall -g typora-obsidian-callouts
+npm uninstall -g @ling0727-ai/typora-obsidian-callouts
 ```
 
 安装前保存并退出 Typora。`--typora-path`、`--theme-dir`、`--user-config-dir`、`--dark-theme`
@@ -125,12 +132,14 @@ sh install.sh --repair
 3. 三个平台运行 JavaScript 语法检查及 headless Chromium 的 Callout DOM 渲染检查。
 4. 构建 npm `.tgz`、平台 ZIP 和校验文件，通过 Artifacts 中转，保留 30 天。
 5. main 成功构建后自动更新 `dev` 预发布；匹配版本标签时创建稳定 Release。两者都附带可直接下载的安装包。
+6. 稳定标签在三平台和 Release 发布完成后，将已经检查的 `.tgz` 发布到 GitHub Packages，并验证认证安装。
+   此步骤使用 `GITHUB_TOKEN` 和 `packages: write`，无需维护者 PAT；重复执行时校验已发布版本一致。
 
-`VERSION` 与 `package.json` 的版本号必须一致。发布标签也必须匹配，例如版本为 `0.2.2`：
+`VERSION` 与 `package.json` 的版本号必须一致。发布标签也必须匹配，例如版本为 `0.2.3`：
 
 ```sh
-git tag v0.2.2
-git push origin v0.2.2
+git tag v0.2.3
+git push origin v0.2.3
 ```
 
 CI 不运行真实 Typora，不消耗 Typora 许可证。安装与后台 DOM 检查不能代替真实应用兼容性确认。

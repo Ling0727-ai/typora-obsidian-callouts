@@ -38,17 +38,24 @@ Install **Node.js 20+ and npm**, save your notes, and quit Typora.
 Run the following commands in a terminal as your normal user.
 The npm installer does not require Python.
 
-### 2. Install the tool and plugin
+### 2. Authenticate to GitHub Packages once
 
-Install the npm package directly from the latest stable GitHub Release:
+No npm account is needed. Create a GitHub **personal access token (classic)** with
+`read:packages` permission, then configure the scope and sign in:
 
 ```sh
-npm install -g https://github.com/Ling0727-ai/typora-obsidian-callouts/releases/latest/download/typora-obsidian-callouts.tgz
+npm config set @ling0727-ai:registry https://npm.pkg.github.com
+npm login --scope=@ling0727-ai --auth-type=legacy --registry=https://npm.pkg.github.com
 ```
 
-Then install the plugin into Typora:
+Enter your own GitHub username and use the token as the password. A private package also
+requires your account to have access. GitHub's npm registry requires authentication even for
+public packages. See the [official authentication guide](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry).
+
+### 3. Install the tool and plugin
 
 ```sh
+npm install -g @ling0727-ai/typora-obsidian-callouts@latest
 typora-obsidian-callouts install
 ```
 
@@ -56,8 +63,26 @@ The npm command installs the management tool. The second command explicitly inst
 plugin and styles. The tarball bundles the framework and extraction dependency, so this
 step does not need additional downloads.
 
-The package is distributed through GitHub Releases and is **not published to the npm registry**.
-Use the tarball URL above rather than `npm install -g typora-obsidian-callouts`.
+The scoped package is hosted at **GitHub Packages**, not npmjs.org. Without the scope registry
+configuration above, npm will query the wrong registry. See [publishing and access details](docs/github-packages.md) (Chinese).
+
+If you previously installed the unscoped 0.2.2 CLI, remove that CLI before installing the new
+scoped package to avoid a command-name conflict:
+
+```sh
+npm uninstall -g typora-obsidian-callouts
+```
+
+This npm uninstall does not remove the plugin files already installed in Typora.
+
+### Alternative: install without a GitHub token
+
+Install the same package directly from a public GitHub Release; no registry login is needed:
+
+```sh
+npm install -g https://github.com/Ling0727-ai/typora-obsidian-callouts/releases/latest/download/typora-obsidian-callouts.tgz
+typora-obsidian-callouts install
+```
 
 ### Development builds and local packages
 
@@ -114,7 +139,7 @@ typora-obsidian-callouts install --dark-theme my-dark-theme
 Keep `ThemeDir` and `DarkTheme` unchanged for an existing installation. Run `uninstall` before
 changing these targets. Use `typora-obsidian-callouts --help` to see all options.
 
-### 3. Restart Typora
+### 4. Restart Typora
 
 Reopen Typora and try the callout or image syntax below. The repository and platform ZIPs
 also include [callout examples](examples/callouts.md) and [image examples](examples/images.md).
@@ -176,11 +201,14 @@ Legacy aliases `notes`, `importent`, and `definitiion` are supported.
 
 ## Update, repair, and uninstall
 
-To update, rerun the npm installation command for your chosen Release, then apply the new files:
+To update from GitHub Packages, fetch the latest tool and apply the new files:
 
 ```sh
+npm install -g @ling0727-ai/typora-obsidian-callouts@latest
 typora-obsidian-callouts update
 ```
+
+For the token-free alternative, rerun the Release tarball installation command instead.
 
 Existing framework files are reused while this project's modules and styles are updated.
 If a Typora update removes the injected loader:
@@ -196,7 +224,7 @@ To remove managed styles and restore module switches when settings are unchanged
 
 ```sh
 typora-obsidian-callouts uninstall
-npm uninstall -g typora-obsidian-callouts
+npm uninstall -g @ling0727-ai/typora-obsidian-callouts
 ```
 
 Edited plugin settings are retained with instructions for disabling the modules manually.
@@ -219,8 +247,11 @@ records/backups use `~/.config/typora_plugin/obsidian-callouts/`.
 
 [GitHub Actions](https://github.com/Ling0727-ai/typora-obsidian-callouts/actions/workflows/build.yml)
 checks Windows, Linux, and macOS. Successful `main` builds update the `dev` prerelease;
-matching `v*` tags publish stable Releases. Release assets include the npm `.tgz`,
-platform ZIPs, and SHA-256 files. Artifacts are retained as intermediate and fallback downloads.
+matching `v*` tags publish stable Releases and the scoped package to GitHub Packages as `latest`.
+The publishing job uses the repository's `GITHUB_TOKEN` with `packages: write`; maintainers
+do not need to create a PAT for Actions publishing. Development builds stay in the `dev` Release.
+Release assets include the npm `.tgz`, platform ZIPs, and SHA-256 files.
+Artifacts are retained as intermediate and fallback downloads.
 
 To build the npm package locally:
 
