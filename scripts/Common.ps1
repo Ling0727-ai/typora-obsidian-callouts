@@ -1,6 +1,7 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $script:ProjectRoot = Split-Path -Parent $PSScriptRoot
+$script:PackageVersion = ([IO.File]::ReadAllText((Join-Path $script:ProjectRoot 'VERSION'))).Trim()
 $script:Utf8 = [Text.UTF8Encoding]::new($false)
 $script:NewLine = [Environment]::NewLine
 $script:Loader = '<script src="./plugin/index.js" defer="defer"></script>'

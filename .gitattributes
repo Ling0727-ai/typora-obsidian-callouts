@@ -4,3 +4,8 @@
 *.md text eol=lf
 *.json text eol=lf
 *.zip binary
+*.py text eol=lf
+*.sh text eol=lf
+*.command text eol=lf
+*.cmd text eol=crlf
+*.yml text eol=lf

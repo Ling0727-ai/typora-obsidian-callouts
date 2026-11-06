@@ -1,5 +1,7 @@
 # Typora Obsidian Callouts
 
+[![Build and check installers](https://github.com/Ling0727-ai/typora-obsidian-callouts/actions/workflows/build.yml/badge.svg)](https://github.com/Ling0727-ai/typora-obsidian-callouts/actions/workflows/build.yml)
+
 让 Typora 识别 Obsidian 风格的 Callout 和图片嵌入，方便迁移已有笔记。
 Callout 在所有主题下使用统一的学术笔记样式。
 
@@ -11,7 +13,7 @@ Callout 在所有主题下使用统一的学术笔记样式。
 > 这里是定理正文。
 ```
 
-本项目整合固定版本的 `obgnail/typora_plugin 1.19.14`、自定义 CSS 和 Windows
+本项目整合固定版本的 `obgnail/typora_plugin 1.19.14`、自定义 CSS 和多平台
 安装脚本。插件运行于 Typora 内部；这是可独立维护和分发的安装项目。
 
 ## 功能
@@ -28,13 +30,25 @@ Callout 在所有主题下使用统一的学术笔记样式。
 
 ## 环境
 
-Windows、Windows PowerShell 5.1 和已安装的 Typora。开发时使用 Typora 1.14.15；
+Windows 使用 PowerShell 5.1；Linux 安装器需要 Python 3.9+。
+macOS 提供实验性入口，要求已有兼容的 WKWebView 桥接环境，默认只启用 Callouts。
+三平台 CI 检查安装脚本和模拟结构，不代表真实 Typora 的兼容性验证。
+详细前提见 [平台说明](docs/platforms.md)。开发时使用 Windows Typora 1.14.15；
 安装器自动接受 `appsrc/window/frame.js` 和旧式 `app/window/frame.js` 加载入口，
 遇到其他 HTML 结构会停止。其他 Typora 版本的界面效果需要实际确认。
 
 ## 安装
 
-下载仓库或构建后的 ZIP，解压到一个固定目录。在该目录打开 PowerShell：
+从 [Releases](https://github.com/Ling0727-ai/typora-obsidian-callouts/releases) 下载对应平台 ZIP；
+开发包可在 [Actions](https://github.com/Ling0727-ai/typora-obsidian-callouts/actions/workflows/build.yml) 的成功运行记录中下载。
+
+| 平台 | 解压后安装 |
+| --- | --- |
+| Windows | 双击 `install.cmd` |
+| Linux | `sh install.sh` |
+| macOS（实验性，需已有桥接） | `Install.command` 或 `sh install.sh` |
+
+Windows 也可以在该目录打开 PowerShell：
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install.ps1
@@ -158,6 +172,17 @@ docs/          设计和开发说明
 - 安装记录与备份：`%USERPROFILE%\.config\typora_plugin\obsidian-callouts\`
 
 ## 检查和打包
+
+GitHub Actions 自动在 Windows、Linux、macOS 上检查并生成带 SHA-256 的安装包。
+推送与 `VERSION` 一致的 `v*` 标签时自动创建 Release；普通推送提供 Artifacts。
+详见 [CI 和发布说明](docs/platforms.md#ci-和发布)。本地跨平台检查与打包：
+
+```sh
+python3 -m unittest discover -s tests -p 'test_*.py' -v
+python3 scripts/build.py --platform linux
+```
+
+Windows 原有检查和打包入口：
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\Lifecycle.ps1

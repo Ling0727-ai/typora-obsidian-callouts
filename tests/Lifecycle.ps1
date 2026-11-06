@@ -28,8 +28,10 @@ $installArgs = @{ TyporaPath = $resources; ThemeDir = $themes; UserConfigDir = $
 Assert ((Read-Text (Join-Path $resources 'window.html')).Contains($script:Loader)) 'Fresh framework injection'
 Assert (Test-Path -LiteralPath (Join-Path $resources 'plugin\callouts\index.js')) 'Archive deployed'
 Assert ((Get-Sha256 (Join-Path $resources 'plugin\callouts\index.js')) -eq (Get-Sha256 (Join-Path $root 'patches\callouts\index.js'))) 'Custom title patch deployed'
+Assert ((Get-Sha256 (Join-Path $resources 'plugin\obsidian_images\index.js')) -eq (Get-Sha256 (Join-Path $root 'patches\obsidian_images\index.js'))) 'Image adapter deployed'
 $current = Read-Text (Join-Path $config 'settings.user.toml')
 Assert ((Get-TomlBoolean $current 'callouts' 'ENABLE') -eq 'true') 'Callouts enabled'
+Assert ((Get-TomlBoolean $current 'obsidian_images' 'ENABLE') -eq 'true') 'Image adapter enabled'
 Assert ((Get-TomlBoolean $current 'window_tab' 'ENABLE') -eq 'true' -and $current.Contains('CUSTOM = "retain"')) 'Other settings preserved'
 $base = Read-Text (Join-Path $themes 'base.user.css')
 Assert ($base.StartsWith('/* BEGIN TYPORA OBSIDIAN CALLOUTS */') -and $base.Contains('--keep-me')) 'Import precedes preserved user styles'
@@ -43,6 +45,7 @@ $base = Read-Text (Join-Path $themes 'base.user.css')
 Assert (-not $base.Contains('BEGIN TYPORA OBSIDIAN CALLOUTS') -and $base.Contains('--later-edit')) 'Uninstall preserves later CSS edits'
 $current = Read-Text (Join-Path $config 'settings.user.toml')
 Assert ((Get-TomlBoolean $current 'global' 'ENABLE') -eq 'false' -and (Get-TomlBoolean $current 'callouts' 'ENABLE') -eq 'false') 'Original switch values restored'
+Assert ($null -eq (Get-TomlBoolean $current 'obsidian_images' 'ENABLE')) 'Original absent image switch restored'
 
 # Simulate a Typora update dropping the injected loader.
 $htmlPath = Join-Path $resources 'window.html'
@@ -62,7 +65,7 @@ $freshConfig = Join-Path $workspace 'fresh-config'
 $freshThemes = Join-Path $workspace 'fresh-themes'
 & (Join-Path $root 'scripts\Install.ps1') -TyporaPath $resources -ThemeDir $freshThemes -UserConfigDir $freshConfig
 $freshSettings = Read-Text (Join-Path $freshConfig 'settings.user.toml')
-Assert ((Get-TomlBoolean $freshSettings 'callouts' 'ENABLE') -eq 'true' -and (Get-TomlBoolean $freshSettings 'window_tab' 'ENABLE') -eq 'false') 'Fresh preset enables only Callouts'
+Assert ((Get-TomlBoolean $freshSettings 'callouts' 'ENABLE') -eq 'true' -and (Get-TomlBoolean $freshSettings 'obsidian_images' 'ENABLE') -eq 'true' -and (Get-TomlBoolean $freshSettings 'window_tab' 'ENABLE') -eq 'false') 'Fresh preset enables Callouts and images'
 & (Join-Path $root 'scripts\Uninstall.ps1') -UserConfigDir $freshConfig
 Assert (-not (Test-Path -LiteralPath (Join-Path $freshConfig 'settings.user.toml'))) 'Uninstall restores absence of user settings'
 

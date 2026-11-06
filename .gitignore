@@ -1,3 +1,5 @@
 dist/
 .work/
 *.log
+__pycache__/
+*.pyc

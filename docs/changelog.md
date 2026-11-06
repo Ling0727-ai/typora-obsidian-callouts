@@ -1,5 +1,14 @@
 # 修改记录
 
+## 0.2.1
+
+- 新增 GitHub Actions：Windows、Ubuntu、macOS 的隔离安装/卸载/升级检查、Callout 后台渲染检查及离线打包。
+- 版本统一读取 `VERSION`；推送匹配的版本标签时自动发布三平台 ZIP 和 SHA-256，普通运行保留 Artifacts。
+- Windows 提供 `install.cmd`；Linux 提供普通用户调用的 Python 3.9+ 安装器和 shell 入口，程序目录写入单独提权。
+- macOS 提供实验性入口，要求已有 WKWebView 桥接；缺少桥接时停止，默认关闭图片适配。
+- 安装器保留用户设置、备份补丁、去重导入，卸载时恢复未被继续修改的模块开关。
+- CI 不启动真实 Typora；macOS 构建成功不代表原生应用运行兼容。
+
 ## 0.2.0
 
 - 新增独立 Obsidian Images 模块，兼容 `![[图片|位置|宽度]]` 和 `![[图片|宽度|位置]]`。

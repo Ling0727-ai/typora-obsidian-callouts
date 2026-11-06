@@ -1,0 +1,112 @@
+name: Build and check installers
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: installers-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+jobs:
+  build:
+    name: ${{ matrix.platform }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: windows
+          - os: ubuntu-latest
+            platform: linux
+          - os: macos-latest
+            platform: macos-experimental
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - name: Check tag matches package version
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: python
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          import os
+          from pathlib import Path
+          assert os.environ['RELEASE_TAG'] == 'v' + Path('VERSION').read_text().strip(), 'Tag must match VERSION'
+      - name: Check JavaScript syntax
+        run: |
+          node --check patches/callouts/index.js
+          node --check patches/obsidian_images/index.js
+      - name: Check shell entry points
+        if: runner.os != 'Windows'
+        run: |
+          sh -n install.sh
+          sh -n Install.command
+          sh install.sh --help
+      - name: Isolated installer and package checks
+        run: python -m unittest discover -s tests -p test_*.py -v
+      - name: Windows PowerShell 5.1 installation lifecycle
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: .\tests\Lifecycle.ps1
+      - name: Install browser test dependencies
+        run: npm install --no-save --no-package-lock playwright@1.56.1
+      - name: Install headless Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Callout DOM rendering checks
+        run: node tests/Titles.cjs
+      - name: Build offline installer
+        run: python scripts/build.py --platform ${{ matrix.platform }}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: typora-obsidian-callouts-${{ matrix.platform }}
+          path: |
+            dist/*.zip
+            dist/*.sha256
+          if-no-files-found: error
+          retention-days: 30
+      - name: Report verification scope
+        shell: python
+        run: |
+          import os
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as f:
+              f.write('## Installer checks passed\n\nIsolated file installation, packaging and headless Callout DOM checks passed.\n\nActual Typora is not installed or launched by this workflow. macOS requires an existing WKWebView bridge and remains experimental.\n')
+
+  release:
+    name: Publish tagged installer packages
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          pattern: typora-obsidian-callouts-*
+          path: release-assets
+          merge-multiple: true
+      - name: Publish release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" release-assets/* --clobber
+          else
+            gh release create "$RELEASE_TAG" release-assets/* --verify-tag --title "$RELEASE_TAG" --notes-file docs/release-notes.md
+          fi

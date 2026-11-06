@@ -23,7 +23,7 @@ if (Test-Path -LiteralPath $statePath) {
     }
 } else {
     $state = [pscustomobject]@{
-        Version = '0.2.0'; ThemeDir = [IO.Path]::GetFullPath($ThemeDir); DarkTheme = $DarkTheme
+        Version = $script:PackageVersion; ThemeDir = [IO.Path]::GetFullPath($ThemeDir); DarkTheme = $DarkTheme
         SettingsExisted = (Test-Path -LiteralPath $settingsPath)
         OriginalGlobal = $null; OriginalCallouts = $null
         SettingsHash = ''; BackupDir = $backupDir
@@ -71,7 +71,7 @@ Write-Utf8 $basePath (Add-ManagedImport $base 'callouts.css')
 Write-Utf8 $darkPath (Add-ManagedImport (Read-Text $darkPath) 'callouts-dark.css')
 Write-Utf8 $settingsPath $settings
 $state.SettingsHash = Get-Sha256 $settingsPath
-$state.Version = '0.2.0'
+$state.Version = $script:PackageVersion
 Write-Utf8 $statePath ($state | ConvertTo-Json -Depth 4)
 Write-Host 'Installed. Save your work and restart Typora. Global Callouts and Obsidian images are enabled.'
 Write-Host ('Settings: ' + $settingsPath)
