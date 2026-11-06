@@ -53,16 +53,42 @@
  background: transparent;
  margin: 0;
  padding: 0;
- font-weight: 600;
- font-size: .98em;
- letter-spacing: .02em;
+ font-weight: normal;
+ font-size: 1em;
+ letter-spacing: normal;
  line-height: 1.6;
+ color: inherit;
+}
+#write .plugin-callout > p:first-child > span:first-child {
+ color: rgb(var(--obs-callout-rgb));
+ font-size: inherit;
+ font-weight: 600;
+}
+/* Hide source only when replacement metadata exists. Never render a blank
+   header merely because a plugin hasn't decorated the current DOM yet. */
+#write .plugin-callout > p:first-child > span:first-child[data-type] {
+ font-size: 0;
+}
+#write .plugin-callout > p:first-child > span:first-child::after {
+ content: attr(data-type);
+ font-size: .98em;
+ font-weight: 600;
+ letter-spacing: .02em;
  color: rgb(var(--obs-callout-rgb));
 }
-#write .plugin-callout > p:first-child > span:first-child { color: inherit; }
+#write .plugin-callout > p:first-child > span:first-child:focus::after,
+#write .plugin-callout > p:first-child > span:first-child:focus-within::after,
+#write .plugin-callout > p:first-child.md-focus > span:first-child::after {
+ content: none;
+}
+#write .plugin-callout > p:first-child > span:first-child:focus,
+#write .plugin-callout > p:first-child > span:first-child:focus-within,
+#write .plugin-callout > p:first-child.md-focus > span:first-child {
+ font-size: inherit;
+}
 #write .plugin-callout > p:first-child::before {
  content: "";
- color: inherit;
+ color: rgb(var(--obs-callout-rgb));
  display: inline-block;
  width: 1em;
  height: 1em;

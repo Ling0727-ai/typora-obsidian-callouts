@@ -27,6 +27,7 @@ $installArgs = @{ TyporaPath = $resources; ThemeDir = $themes; UserConfigDir = $
 & (Join-Path $root 'scripts\Install.ps1') @installArgs
 Assert ((Read-Text (Join-Path $resources 'window.html')).Contains($script:Loader)) 'Fresh framework injection'
 Assert (Test-Path -LiteralPath (Join-Path $resources 'plugin\callouts\index.js')) 'Archive deployed'
+Assert ((Get-Sha256 (Join-Path $resources 'plugin\callouts\index.js')) -eq (Get-Sha256 (Join-Path $root 'patches\callouts\index.js'))) 'Custom title patch deployed'
 $current = Read-Text (Join-Path $config 'settings.user.toml')
 Assert ((Get-TomlBoolean $current 'callouts' 'ENABLE') -eq 'true') 'Callouts enabled'
 Assert ((Get-TomlBoolean $current 'window_tab' 'ENABLE') -eq 'true' -and $current.Contains('CUSTOM = "retain"')) 'Other settings preserved'

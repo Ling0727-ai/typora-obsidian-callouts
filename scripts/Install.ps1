@@ -23,7 +23,7 @@ if (Test-Path -LiteralPath $statePath) {
     }
 } else {
     $state = [pscustomobject]@{
-        Version = '0.1.0'; ThemeDir = [IO.Path]::GetFullPath($ThemeDir); DarkTheme = $DarkTheme
+        Version = '0.1.2'; ThemeDir = [IO.Path]::GetFullPath($ThemeDir); DarkTheme = $DarkTheme
         SettingsExisted = (Test-Path -LiteralPath $settingsPath)
         OriginalGlobal = $null; OriginalCallouts = $null
         SettingsHash = ''; BackupDir = $backupDir
@@ -56,10 +56,15 @@ $null = [IO.Directory]::CreateDirectory($assetDir)
 foreach ($asset in @('callouts.css', 'callouts-dark.css')) {
     Copy-Item -LiteralPath (Join-Path $script:ProjectRoot ('styles\' + $asset)) -Destination (Join-Path $assetDir $asset) -Force
 }
-Write-Utf8 $basePath (Add-ManagedImport (Read-Text $basePath) 'callouts.css')
+$base = Read-Text $basePath
+# Migrate only the explicitly marked block from this project's early setup.
+# Its original content was backed up above.
+$base = [regex]::Replace($base, '(?s)/\* BEGIN OBSIDIAN CALLOUTS \*/.*?/\* END OBSIDIAN CALLOUTS \*/\r?\n?', '')
+Write-Utf8 $basePath (Add-ManagedImport $base 'callouts.css')
 Write-Utf8 $darkPath (Add-ManagedImport (Read-Text $darkPath) 'callouts-dark.css')
 Write-Utf8 $settingsPath $settings
 $state.SettingsHash = Get-Sha256 $settingsPath
+$state.Version = '0.1.2'
 Write-Utf8 $statePath ($state | ConvertTo-Json -Depth 4)
 Write-Host 'Installed. Save your work and restart Typora. Callouts now use global styles.'
 Write-Host ('Settings: ' + $settingsPath)

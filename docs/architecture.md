@@ -30,9 +30,9 @@ Night 的提亮变量只在 `@media screen` 中生效，打印保留浅色配色
 @import url("./obsidian-callouts/callouts-dark.css");
 ```
 
-旧版本手动粘贴的 Callout CSS 不自动删除。若存在额外的
-`/* BEGIN OBSIDIAN CALLOUTS */` 旧区块，先备份再手动移除，避免旧规则覆盖新规则。
-安装器仅管理 `BEGIN TYPORA OBSIDIAN CALLOUTS` 标记。
+安装器备份后会迁移早期设置产生的 `/* BEGIN OBSIDIAN CALLOUTS */` 旧区块，
+避免其覆盖新的标题规则。其他手动粘贴且未标记的 CSS 保留原样。
+新安装使用 `BEGIN TYPORA OBSIDIAN CALLOUTS` 标记。
 
 ## 程序目录
 
@@ -48,6 +48,8 @@ Night 的提亮变量只在 `@media screen` 中生效，打印保留浅色配色
 
 更新 `vendor` 中归档、对应许可证和 `manifest.json`，核对 SHA-256。
 不要直接改动打包归档里的源码。保留上游的版权、依赖声明和版本信息。
+本项目的标题补丁独立保存在 `patches/callouts/index.js`；升级上游版本时需核对
+该模块与新的框架接口。安装器会备份已安装模块，再应用这份补丁。
 现有框架的升级需单独进行；样式更新不会升级框架。
 
 ## 验证边界

@@ -7,11 +7,14 @@ $htmlPath = Join-Path $resources 'window.html'
 $html = Read-Text $htmlPath
 $plugin = Join-Path $resources 'plugin'
 $entry = Join-Path $plugin 'index.js'
-if ($html.Contains($script:Loader) -and (Test-Path -LiteralPath $entry)) {
-    Write-Host 'Framework loader already installed.'
+$patch = Join-Path $script:ProjectRoot 'patches\callouts\index.js'
+$calloutsEntry = Join-Path $plugin 'callouts\index.js'
+$patchCurrent = (Test-Path -LiteralPath $calloutsEntry) -and ((Get-Sha256 $calloutsEntry) -eq (Get-Sha256 $patch))
+if ($html.Contains($script:Loader) -and (Test-Path -LiteralPath $entry) -and $patchCurrent) {
+    Write-Host 'Framework loader and title patch already installed.'
     return
 }
-if ($html.Contains($script:Loader)) { throw 'Loader exists but plugin/index.js is missing. Restore the plugin folder before continuing.' }
+if ($html.Contains($script:Loader) -and -not (Test-Path -LiteralPath $entry)) { throw 'Loader exists but plugin/index.js is missing. Restore the plugin folder before continuing.' }
 if ($Repair -and -not (Test-Path -LiteralPath $entry)) { throw 'Repair requires an existing plugin directory. Run Install.ps1 for a fresh installation.' }
 if ((Test-Path -LiteralPath $plugin) -and -not (Test-Path -LiteralPath $entry)) { throw 'An unrecognized plugin directory exists. Inspect it before installing.' }
 
@@ -25,7 +28,7 @@ try { [IO.File]::WriteAllText($probe, ''); [IO.File]::Delete($probe) }
 catch [UnauthorizedAccessException] {
     $argsList = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', ('"' + $PSCommandPath + '"'), '-TyporaPath', ('"' + $resources + '"'))
     if ($Repair) { $argsList += '-Repair' }
-    $process = Start-Process -FilePath 'powershell.exe' -Verb RunAs -ArgumentList $argsList -Wait -PassThru
+    $process = Start-Process -FilePath 'powershell.exe' -Verb RunAs -WindowStyle Hidden -ArgumentList $argsList -Wait -PassThru
     if ($process.ExitCode -ne 0) { throw 'Administrator installation failed or was cancelled.' }
     return
 }
@@ -43,9 +46,16 @@ try {
         Copy-Item -LiteralPath (Join-Path $script:ProjectRoot 'config\settings.user.toml') -Destination (Join-Path $stagedPlugin 'global\settings\settings.user.toml') -Force
         Copy-Item -LiteralPath $stagedPlugin -Destination $plugin -Recurse
     }
+    if (-not $patchCurrent) {
+        if (Test-Path -LiteralPath $calloutsEntry) {
+            Copy-Item -LiteralPath $calloutsEntry -Destination ($calloutsEntry + '.before-titles-' + (Get-Date -Format 'yyyyMMddHHmmssfff') + '.bak')
+        }
+        Copy-Item -LiteralPath $patch -Destination $calloutsEntry -Force
+        Write-Host 'Custom title patch installed.'
+    }
     $backup = $htmlPath + '.callouts-' + (Get-Date -Format 'yyyyMMddHHmmssfff') + '.bak'
     Copy-Item -LiteralPath $htmlPath -Destination $backup
-    Write-Utf8 $htmlPath ($html.Replace($frame, $frame + $script:Loader))
+    if (-not $html.Contains($script:Loader)) { Write-Utf8 $htmlPath ($html.Replace($frame, $frame + $script:Loader)) }
     Write-Host ('Framework loader installed. Backup: ' + $backup)
 } finally {
     # Only remove this invocation's unique staging directory.

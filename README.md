@@ -87,7 +87,9 @@ GitHub 风格提示块；本项目不修改这个偏好。
 - 自定义类型由上游 Callouts 模块识别，CSS 负责外观。
 - `[!type]-` 可默认隐藏内容，鼠标悬停时预览；当前上游模块不提供完整的
   Obsidian 折叠箭头点击交互。`[!type]+` 保持展开。
-- 自定义标题仍沿用上游显示行为，不承诺与 Obsidian 的标题排版完全一致。
+- 支持 `[!type] 自定义标题`：显示标记后的纯文本标题；没有标题时显示类型名。
+  正文保持普通字重与正文颜色。编辑首行时显示原始 Markdown。
+  带行内公式或复杂格式的标题仍需额外适配。
 - HTML/PDF 导出依赖上游导出钩子。本项目尚未完成真实文档的导出验证；
   `html-plain` 导出不在上游 Callouts 模块的支持范围内。
 - 全局样式覆盖已识别的 Callout。第三方主题的高优先级规则可能需要额外适配。
@@ -146,5 +148,14 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Build.ps1
 
 检查使用项目 `.work/` 下的模拟 Typora 目录，不改动真实安装和用户配置。
 生成的离线 ZIP 位于 `dist/`；该目录不提交到 Git。
+
+标题渲染回归检查另外需要 Node.js、Playwright 和可用的 Chromium 浏览器：
+
+```powershell
+node .\tests\Titles.cjs
+```
+
+可用 `CHROMIUM_PATH` 指定 Chrome 的完整路径。检查覆盖自定义标题、默认标题、
+正文颜色与字重、折叠标记和编辑首行时的可见性。
 
 本项目采用 MIT 许可证。上游版权和许可证见 `THIRD_PARTY_NOTICES.md`。
