@@ -1,6 +1,7 @@
 # Typora Obsidian Callouts
 
-让 Typora 识别 Obsidian 风格的 Callout，并在所有主题下使用统一的学术笔记样式。
+让 Typora 识别 Obsidian 风格的 Callout 和图片嵌入，方便迁移已有笔记。
+Callout 在所有主题下使用统一的学术笔记样式。
 
 ```markdown
 > [!definition] 定义
@@ -19,7 +20,9 @@
 - 使用 `base.user.css` 接入全局样式，切换主主题后继续生效。
 - 为 Night 主题提供独立的深色配色；其他深色主题可以指定文件名接入。
 - 设置保存在用户目录，避免普通权限下向 `Program Files` 写配置失败。
-- 全新安装仅启用 Callouts；复用已有框架时保留其他模块的启用状态。
+- 兼容 `![[图片.png|C|500]]` / `![[图片.svg|500|C]]`，支持 `C/R/L` 对齐和像素宽度。
+- 新图片拖入、粘贴沿用 Typora 的标准 Markdown 图片流程。
+- 全新安装启用 Callouts 与 Obsidian Images；复用已有框架时保留其他模块的启用状态。
 - 内含固定版本的上游 ZIP，安装时无需联网；展开前检查 SHA-256。
 - 安装前备份、重复安装去重、卸载样式、Typora 更新后修复加载入口。
 
@@ -57,6 +60,21 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install.ps1
 
 同一安装记录的 `ThemeDir` 与 `DarkTheme` 保持固定；若需更换目标，先卸载样式，
 再以新参数安装。添加更多深色主题的方法见 `docs/architecture.md`。
+
+## 图片迁移
+
+```markdown
+![[图片.png|C|500]]
+![[图片.svg|500|R]]
+![[附件/图片.jpg|L|320]]
+```
+
+`C/R/L` 分别为居中、右对齐、左对齐，数字是图片宽度（px），两者顺序不限。
+模块保留原始图片写法，并查找当前笔记目录或 Obsidian 库内附件。新插入图片继续使用
+Typora 原生 `![说明](路径)`，不修改图像偏好。完整规则见 [图片迁移说明](docs/images.md)，
+可打开 `examples/images.md` 查看同仓库 SVG 示例。
+
+从 0.1.x 更新需要重新运行安装脚本并重启 Typora，才能安装图片模块。
 
 ## 类型
 
@@ -113,8 +131,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Uninstall.ps1
 ```
 
 卸载移除本项目添加的 CSS 导入，保留用户其他样式。若插件设置在安装后未发生
-变化，会恢复安装前的 `global.ENABLE` 和 `callouts.ENABLE` 状态；若已发生变化，
-会保留现状并提示手动关闭 Callouts。备份保存在用户配置目录下。
+变化，会恢复安装前的 `global.ENABLE`、`callouts.ENABLE` 与 `obsidian_images.ENABLE` 状态；若已发生变化，
+会保留现状并提示手动关闭 Callouts 与 Obsidian Images。备份保存在用户配置目录下。
 
 卸载会保留共享插件框架和失效的样式资源文件，避免影响后来启用的其他插件。
 若要完全卸载框架，可按上游的卸载方法处理；程序目录变更前请自行备份。

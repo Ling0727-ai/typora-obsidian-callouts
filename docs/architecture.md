@@ -14,7 +14,7 @@
 上游设置加载顺序：默认配置 → 程序目录配置 → 用户目录配置。
 若用户目录存在 `settings.user.toml`，保存时会优先写入该文件。
 
-安装器复用已有设置，仅设置 `[global]` 和 `[callouts]` 中的 `ENABLE = true`。
+安装器复用已有设置，仅设置 `[global]`、`[callouts]` 和 `[obsidian_images]` 中的 `ENABLE = true`。
 全新安装使用 `config/settings.user.toml`，其他模块关闭。
 当前脚本处理普通 `[section]` 与单行布尔键，不是通用 TOML 格式化器。
 
@@ -57,3 +57,12 @@ Night 的提亮变量只在 `@media screen` 中生效，打印保留浅色配色
 `tests/Lifecycle.ps1` 检查归档哈希、脚本解析、隔离安装、重复安装、设置保留、
 卸载与修复。它不会启动真实 Typora。
 发布前仍应手动确认浅色/深色显示、自定义标题、嵌套引用和 HTML/PDF 导出。
+
+## 图片适配模块
+
+`patches/obsidian_images/index.js` 是独立模块，通过同一框架加载。
+安装器对图片模块单独比对哈希、备份和更新，不改动上游归档。
+模块扩展 Typora 公共 InlineLexer 的图片匹配，沿用原生图片节点、编辑源文本与导出，
+宽度和位置通过实际 `<img>` 的样式表达。图片参数不会写回笔记。
+附件名索引在后台异步建立，缓存 30 秒；不会递归进入符号链接目录。
+拖放、粘贴及图片复制路径继续由 Typora 原生配置负责。详情见 `docs/images.md`。

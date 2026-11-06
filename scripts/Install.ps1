@@ -23,7 +23,7 @@ if (Test-Path -LiteralPath $statePath) {
     }
 } else {
     $state = [pscustomobject]@{
-        Version = '0.1.5'; ThemeDir = [IO.Path]::GetFullPath($ThemeDir); DarkTheme = $DarkTheme
+        Version = '0.2.0'; ThemeDir = [IO.Path]::GetFullPath($ThemeDir); DarkTheme = $DarkTheme
         SettingsExisted = (Test-Path -LiteralPath $settingsPath)
         OriginalGlobal = $null; OriginalCallouts = $null
         SettingsHash = ''; BackupDir = $backupDir
@@ -46,6 +46,13 @@ if (-not (Test-Path -LiteralPath $statePath)) {
 }
 $settings = Set-TomlBoolean $settings 'global' 'ENABLE' 'true'
 $settings = Set-TomlBoolean $settings 'callouts' 'ENABLE' 'true'
+if (-not $state.PSObject.Properties['OriginalImages']) {
+    $state | Add-Member -NotePropertyName OriginalImages -NotePropertyValue (Get-TomlBoolean $settings 'obsidian_images' 'ENABLE')
+}
+$settings = Set-TomlBoolean $settings 'obsidian_images' 'ENABLE' 'true'
+if (-not (Get-TableMatch $settings 'obsidian_images').Groups['body'].Value.Contains('NAME =')) {
+    $settings = $settings.Replace('[obsidian_images]', '[obsidian_images]' + $script:NewLine + 'NAME = "Obsidian Images"')
+}
 
 # Obtain program-file access before changing user files; leave the active document alone.
 & (Join-Path $PSScriptRoot 'Install-Framework.ps1') -TyporaPath $resources
@@ -64,8 +71,8 @@ Write-Utf8 $basePath (Add-ManagedImport $base 'callouts.css')
 Write-Utf8 $darkPath (Add-ManagedImport (Read-Text $darkPath) 'callouts-dark.css')
 Write-Utf8 $settingsPath $settings
 $state.SettingsHash = Get-Sha256 $settingsPath
-$state.Version = '0.1.5'
+$state.Version = '0.2.0'
 Write-Utf8 $statePath ($state | ConvertTo-Json -Depth 4)
-Write-Host 'Installed. Save your work and restart Typora. Callouts now use global styles.'
+Write-Host 'Installed. Save your work and restart Typora. Global Callouts and Obsidian images are enabled.'
 Write-Host ('Settings: ' + $settingsPath)
 Write-Host ('Backup: ' + $backupDir)

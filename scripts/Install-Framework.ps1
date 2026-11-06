@@ -10,8 +10,11 @@ $entry = Join-Path $plugin 'index.js'
 $patch = Join-Path $script:ProjectRoot 'patches\callouts\index.js'
 $calloutsEntry = Join-Path $plugin 'callouts\index.js'
 $patchCurrent = (Test-Path -LiteralPath $calloutsEntry) -and ((Get-Sha256 $calloutsEntry) -eq (Get-Sha256 $patch))
-if ($html.Contains($script:Loader) -and (Test-Path -LiteralPath $entry) -and $patchCurrent) {
-    Write-Host 'Framework loader and title patch already installed.'
+$imagesPatch = Join-Path $script:ProjectRoot 'patches\obsidian_images\index.js'
+$imagesEntry = Join-Path $plugin 'obsidian_images\index.js'
+$imagesCurrent = (Test-Path -LiteralPath $imagesEntry) -and ((Get-Sha256 $imagesEntry) -eq (Get-Sha256 $imagesPatch))
+if ($html.Contains($script:Loader) -and (Test-Path -LiteralPath $entry) -and $patchCurrent -and $imagesCurrent) {
+    Write-Host 'Framework loader, title patch and image adapter already installed.'
     return
 }
 if ($html.Contains($script:Loader) -and -not (Test-Path -LiteralPath $entry)) { throw 'Loader exists but plugin/index.js is missing. Restore the plugin folder before continuing.' }
@@ -52,6 +55,14 @@ try {
         }
         Copy-Item -LiteralPath $patch -Destination $calloutsEntry -Force
         Write-Host 'Custom title patch installed.'
+    }
+    if (-not $imagesCurrent) {
+        if (Test-Path -LiteralPath $imagesEntry) {
+            Copy-Item -LiteralPath $imagesEntry -Destination ($imagesEntry + '.before-update-' + (Get-Date -Format 'yyyyMMddHHmmssfff') + '.bak')
+        }
+        $null = [IO.Directory]::CreateDirectory((Split-Path -Parent $imagesEntry))
+        Copy-Item -LiteralPath $imagesPatch -Destination $imagesEntry -Force
+        Write-Host 'Obsidian image adapter installed.'
     }
     $backup = $htmlPath + '.callouts-' + (Get-Date -Format 'yyyyMMddHHmmssfff') + '.bak'
     Copy-Item -LiteralPath $htmlPath -Destination $backup

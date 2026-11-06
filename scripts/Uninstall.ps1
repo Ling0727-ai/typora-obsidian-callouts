@@ -15,11 +15,14 @@ if (Test-Path -LiteralPath $settingsPath) {
             $settings = Read-Text $settingsPath
             $settings = Set-TomlBoolean $settings 'global' 'ENABLE' $state.OriginalGlobal
             $settings = Set-TomlBoolean $settings 'callouts' 'ENABLE' $state.OriginalCallouts
+            if ($state.PSObject.Properties['OriginalImages']) {
+                $settings = Set-TomlBoolean $settings 'obsidian_images' 'ENABLE' $state.OriginalImages
+            }
             Write-Utf8 $settingsPath $settings
         } else {
             Remove-Item -LiteralPath $settingsPath
         }
-    } else { Write-Warning 'Plugin settings changed since installation; retained them. Disable Callouts manually if desired.' }
+    } else { Write-Warning 'Plugin settings changed since installation; retained them. Disable callouts and obsidian_images manually if desired.' }
 }
 # Keep shared framework files and backups: they may now be used by other plugins.
 # Styles become inactive when their managed imports are removed.

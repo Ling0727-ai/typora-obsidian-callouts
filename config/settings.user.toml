@@ -202,5 +202,9 @@ ENABLE = false
 [callouts]
 ENABLE = true
 
+[obsidian_images]
+ENABLE = true
+NAME = "Obsidian Images"
+
 [test]
 ENABLE = false

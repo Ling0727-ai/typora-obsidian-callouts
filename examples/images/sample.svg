@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="180" viewBox="0 0 600 180">
+  <rect width="600" height="180" rx="16" fill="#edf4fc"/>
+  <g font-family="sans-serif" font-size="22" text-anchor="middle" fill="#244e78">
+    <rect x="20" y="58" width="150" height="64" rx="8" fill="#d6e6f7"/>
+    <rect x="225" y="58" width="150" height="64" rx="8" fill="#d6e6f7"/>
+    <rect x="430" y="58" width="150" height="64" rx="8" fill="#d6e6f7"/>
+    <text x="95" y="99">Input</text><text x="300" y="99">Process</text><text x="505" y="99">Output</text>
+    <text x="198" y="99">→</text><text x="403" y="99">→</text>
+  </g>
+</svg>
