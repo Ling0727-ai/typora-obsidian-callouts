@@ -41,14 +41,25 @@ class CalloutsPlugin extends BasePlugin {
   process = () => {
     this.utils.eventHub.on(this.utils.eventHub.eventType.allPluginsHadInjected, () => setTimeout(this.setCallouts, 100))
     this.utils.eventHub.on(this.utils.eventHub.eventType.fileEdited, this.setCallouts)
+    // A file can finish loading after the startup scan. Native GitHub alert
+    // containers are also created at this point, before the first edit.
+    const schedule = () => {
+      clearTimeout(this.fileLoadTimer)
+      this.fileLoadTimer = setTimeout(this.setCallouts, 0)
+    }
+    this.utils.eventHub.on(this.utils.eventHub.eventType.fileOpened, schedule)
+    this.utils.eventHub.on(this.utils.eventHub.eventType.fileContentLoaded, schedule)
     this.utils.exportHelper.register(this.fixedName, this.beforeExport, this.afterExport)
   }
 
   setCallouts = () => {
-    this.utils.entities.querySelectorAllInWrite("blockquote > p:first-child").forEach(p => {
+    // Typora's block parser accepts [!note] Title as a native alert, while its
+    // inline alert parser only accepts a standalone [!note] line. Such custom
+    // titles remain raw inside div.md-alert rather than inside blockquote.
+    this.utils.entities.querySelectorAllInWrite("blockquote > p:first-child, .md-alert > p:first-child").forEach(p => {
       const blockquote = p.parentElement
       const result = p.textContent.match(/^\[!(?<type>\w+)\](?<fold>[+-]?)/)
-      const ok = !!(result?.groups)
+      const ok = !!(result?.groups) && !p.querySelector('[md-inline="alert_text"], .md-alert-text')
       blockquote.classList.toggle("plugin-callout", ok)
       if (ok) {
         const { type, fold } = result.groups
@@ -80,17 +91,17 @@ class CalloutsPlugin extends BasePlugin {
   afterExport = (html, ...args) => {
     if (!this.check(args)) return
 
-    const quotesInPage = [...this.utils.entities.querySelectorAllInWrite("blockquote")]
+    const quotesInPage = [...this.utils.entities.querySelectorAllInWrite("blockquote, .md-alert")]
     if (quotesInPage.length === 0) return
 
     const doc = new DOMParser().parseFromString(html, "text/html")
-    const quotesInHTML = [...doc.querySelectorAll("blockquote")]
+    const quotesInHTML = [...doc.querySelectorAll("blockquote, .md-alert")]
     if (quotesInHTML.length !== quotesInPage.length) return
 
     const zipArray = this.utils.zip(quotesInPage, quotesInHTML)
     for (const [quoteInPage, quoteInHTML] of zipArray) {
-      if (quoteInPage.classList.length) {
-        quoteInHTML.className = "plugin-callout"
+      if (quoteInPage.classList.contains("plugin-callout")) {
+        quoteInHTML.classList.add("plugin-callout")
 
         const calloutType = quoteInPage.getAttribute("callout-type")
         quoteInHTML.setAttribute("callout-type", calloutType)

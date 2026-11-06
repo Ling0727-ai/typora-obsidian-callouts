@@ -156,6 +156,7 @@ node .\tests\Titles.cjs
 ```
 
 可用 `CHROMIUM_PATH` 指定 Chrome 的完整路径。检查覆盖自定义标题、默认标题、
-正文颜色与字重、折叠标记和编辑首行时的可见性。
+正文颜色与字重、折叠标记、编辑首行时的可见性，以及 NOTE 原生容器、
+首次打开文件的异步加载和对应 HTML 导出。
 
 本项目采用 MIT 许可证。上游版权和许可证见 `THIRD_PARTY_NOTICES.md`。
