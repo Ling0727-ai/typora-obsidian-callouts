@@ -26,6 +26,7 @@ and a cross-platform npm command-line installer. The plugin modules run inside T
 - Global CSS through `base.user.css`, plus a dedicated palette for Night.
 - Custom titles, academic callout types, and legacy aliases.
 - Image embeds such as `![[image.png|C|500]]` and `![[image.svg|500|C]]`.
+- Obsidian note links such as `[[Note]]`, `[[folder/Note|display text]]`, and `[[Note#Heading]]`.
 - Native Typora Markdown links for newly dropped or pasted images.
 - User configuration stored outside the application directory.
 - Bundled framework and ZIP dependency, with SHA-256 verification of the framework archive.

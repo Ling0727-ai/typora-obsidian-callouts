@@ -1,8 +1,10 @@
 // Copyright (c) 2026 Ling0727-ai. MIT license.
-// Keep the original wikilink in Typora's native image source component.
+// Adapt Obsidian image embeds and note wikilinks to Typora's native inline lexer.
 class ObsidianImagesPlugin extends BasePlugin {
   marker = "typora-obsidian-image:"
+  linkMarker = "typora-obsidian-link:"
   roots = new Map()
+  noteRoots = new Map()
   pending = new Set()
 
   parse = text => {
@@ -21,6 +23,15 @@ class ObsidianImagesPlugin extends BasePlugin {
     return { raw: match[0], inner: match[1], file, align, width }
   }
 
+  parseLink = text => {
+    if (text.startsWith("![[")) return null
+    const match = /^\[\[([^\]\r\n]+)\]\]/.exec(text)
+    if (!match) return null
+    const [target, alias] = match[1].split("|").map(s => s.trim())
+    if (!target) return null
+    return { raw: match[0], target, label: alias || target.split("#", 1)[0].split(/[\\/]/).pop().replace(/\.md$/i, "") }
+  }
+
   style = () => `
 #write .md-image:has(> img.obsidian-image):not(.md-expand) { display: block; width: auto; max-width: 100%; }
 img.obsidian-image { display: block; height: auto; max-width: 100%; object-fit: contain; }
@@ -29,6 +40,7 @@ img.obsidian-image { display: block; height: auto; max-width: 100%; object-fit: 
   prepare = async () => {
     this.fs = require("fs")
     this.path = require("path")
+    this.pathToFileURL = require("url").pathToFileURL
     await this.utils.waitUntil(() => File?.editor?.brush?.inline)
     const lexer = File.editor.brush.inline.constructor
     if (!lexer.rules?.normal?.image || !File.editor.brush.inline.rules?.image) {
@@ -51,11 +63,24 @@ img.obsidian-image { display: block; height: auto; max-width: 100%; object-fit: 
         const image = plugin.parse(text)
         return image ? [image.raw, image.raw, undefined, "", undefined, ""] : smart.exec(text)
       } }
+      const normalLink = table.link
+      if (normalLink) table.link = { exec(text) {
+        const link = plugin.parseLink(text)
+        if (!link) return normalLink.exec(text)
+        const href = plugin.linkMarker + encodeURIComponent(link.target)
+        const label = link.label.replace(/\[/g, "\\[").replace(/\]/g, "\\]")
+        const result = normalLink.exec(`[${label}](${href})`)
+        if (!result) return normalLink.exec(text)
+        result[0] = link.raw
+        result.index = 0
+        result.input = text
+        return result
+      } }
     }
     // Hook the common inline output, including the native export lexer. Parsing
     // still handles escapes, code spans and ordinary Markdown images itself.
     await this.utils.decorator.decorate(lexer.prototype, "output", {
-      after(html) { return plugin.decorateImages(html) }, modifyResult: true,
+      after(html) { return plugin.decorateLinks(plugin.decorateImages(html)) }, modifyResult: true,
     })
   }
 
@@ -78,6 +103,65 @@ img.obsidian-image { display: block; height: auto; max-width: 100%; object-fit: 
       if (options.width) { img.style.width = options.width + "px"; img.setAttribute("width", options.width) }
       return img.outerHTML
     })
+  }
+
+  decorateLinks = html => {
+    if (typeof html !== "string" || !html.includes(this.linkMarker)) return html
+    return html.replace(/<a\b[^>]*>[\s\S]*?<\/a>/gi, tag => {
+      if (!tag.includes(this.linkMarker)) return tag
+      const template = document.createElement("template")
+      template.innerHTML = tag
+      const anchor = template.content.querySelector("a")
+      const href = anchor?.getAttribute("href") || ""
+      if (!href.startsWith(this.linkMarker)) return tag
+      let target
+      try { target = decodeURIComponent(href.slice(this.linkMarker.length)) } catch { return tag }
+      anchor.setAttribute("href", this.resolveNote(target))
+      return anchor.outerHTML
+    })
+  }
+
+  resolveNote = target => {
+    const [file, ...suffix] = target.split("#")
+    const current = this.utils.getFilePath()
+    const root = this.getRoot()
+    const dir = current ? this.path.dirname(current) : root
+    let decoded = file.replace(/\uE006/g, "_").replace(/\uE020/g, "\\").replace(/\uE021/g, "|").replace(/\uE022/g, " ")
+    try { decoded = decodeURIComponent(decoded) } catch { /* Literal percent in a filename. */ }
+    const withExtension = /\.md$/i.test(decoded) ? decoded : decoded + ".md"
+    const candidates = [this.path.resolve(dir || ".", decoded), this.path.resolve(dir || ".", withExtension)]
+    if (root) candidates.push(this.path.resolve(root, decoded.replace(/^[\\/]+/, "")), this.path.resolve(root, withExtension.replace(/^[\\/]+/, "")))
+    for (const candidate of candidates) {
+      try { if (this.fs.statSync(candidate).isFile()) return this.noteUrl(candidate, suffix) } catch { /* Try the vault index. */ }
+    }
+    if (!root) return target
+    let entry = this.noteRoots.get(root)
+    if (!entry) {
+      entry = { files: [], done: false }
+      this.noteRoots.set(root, entry)
+      this.indexNotes(root, entry)
+    }
+    const normalized = withExtension.replace(/\\/g, "/").replace(/^\.\//, "").toLowerCase()
+    const hits = entry.files.filter(p => p.toLowerCase() === normalized || p.toLowerCase().endsWith("/" + normalized))
+    if (entry.done && hits.length === 1) return this.noteUrl(this.path.join(root, hits[0]), suffix)
+    return target
+  }
+
+  noteUrl = (file, suffix) => this.pathToFileURL(file).href + (suffix.length ? "#" + suffix.join("#") : "")
+
+  indexNotes = async (root, entry) => {
+    const visit = async dir => {
+      let children
+      try { children = await this.fs.promises.readdir(dir, { withFileTypes: true }) } catch { return }
+      for (const child of children) {
+        const target = this.path.join(dir, child.name)
+        if (child.isDirectory() && !child.name.startsWith(".") && !["node_modules", "$RECYCLE.BIN"].includes(child.name)) await visit(target)
+        else if (child.isFile() && /\.md$/i.test(child.name)) entry.files.push(this.path.relative(root, target).replace(/\\/g, "/"))
+      }
+    }
+    await visit(root)
+    entry.done = true
+    if (this.getRoot() === root) this.refresh(true)
   }
 
   getRoot = () => {
@@ -141,8 +225,8 @@ img.obsidian-image { display: block; height: auto; max-width: 100%; object-fit: 
     const write = this.utils.entities.eWrite
     const cids = new Set()
     for (const block of write.querySelectorAll("p[cid], h1[cid], h2[cid], h3[cid], h4[cid], h5[cid], h6[cid], td, th")) {
-      if (!block.textContent.includes("![[") || block.closest("pre, .md-fences, .md-htmlblock, .md-mathblock")) continue
-      if (!retry && block.querySelector("img.obsidian-image")) continue
+      if (!block.textContent.includes("[[") || block.closest("pre, .md-fences, .md-htmlblock, .md-mathblock")) continue
+      if (!retry && block.querySelector("a[href]") && !block.textContent.includes("![[")) continue
       const cid = block.closest("[cid]")?.getAttribute("cid")
       if (cid) cids.add(cid)
     }
