@@ -1,6 +1,6 @@
 {
   "name": "@ling0727-ai/typora-obsidian-callouts",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "Install Obsidian callouts and image embeds in Typora",
   "license": "MIT",
   "repository": { "type": "git", "url": "https://github.com/Ling0727-ai/typora-obsidian-callouts.git" },

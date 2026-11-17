@@ -1,5 +1,9 @@
 # 修改记录
 
+## 0.2.5
+
+- Add Obsidian note wikilinks with aliases and local note resolution.
+
 ## 0.2.4
 
 - 默认安装源改为公开 npmjs.org，用户可直接执行作用域包的短命令，无需登录或 GitHub Token。
